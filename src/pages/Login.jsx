@@ -56,6 +56,7 @@ const Login = () => {
         id: matchedRow[2],
         name: matchedRow[3], // Column D
         role: String(matchedRow[6] || 'USER').toUpperCase(), // Column G
+        access: matchedRow[7] ? String(matchedRow[7]).split(',').map(p => p.trim()) : [], // Column H
         empId: matchedRow[2]
       };
 

@@ -24,20 +24,20 @@ const Sidebar = ({ isOpen, onClose }) => {
     navigate('/login', { replace: true });
   };
 
-  const adminMenuItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/daily-report', icon: Plus, label: 'Daily Report' },
-    { path: '/admin-approval', icon: CheckCircle, label: 'Admin Approval' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
+  const allMenuItems = [
+    { path: '/', icon: LayoutDashboard, label: 'Dashboard', accessKey: 'Dashboard' },
+    { path: '/daily-report', icon: Plus, label: 'Daily Report', accessKey: 'Daily Report' },
+    { path: '/admin-approval', icon: CheckCircle, label: 'Admin Approval', accessKey: 'Admin Approval' },
+    { path: '/settings', icon: Settings, label: 'Settings', accessKey: 'Settings' },
   ];
 
-  const employeeMenuItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/daily-report', icon: Plus, label: 'Daily Report' },
-    { path: '/admin-approval', icon: CheckCircle, label: 'Admin Approval' },
-  ];
+  // MASTER ADMIN / ADMIN see everything; regular users see only their access list
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'MASTER ADMIN';
+  const userAccess = user?.access || [];
 
-  const menuItems = adminMenuItems; // Show all pages to all users
+  const menuItems = isAdmin
+    ? allMenuItems
+    : allMenuItems.filter(item => userAccess.includes(item.accessKey));
 
   return (
     <>
