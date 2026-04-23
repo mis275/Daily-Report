@@ -655,6 +655,7 @@ export default function AdminApproval() {
                         <p className="text-sm text-gray-700 leading-relaxed font-medium">{line}</p>
                         {detailImages.length > 0 && (
                           <div className="flex flex-wrap gap-2">
+                            {detailImages.map((link, imgIdx) => (
                               <button 
                                 key={imgIdx} 
                                 onClick={() => setPreviewImage(link)}
@@ -662,6 +663,7 @@ export default function AdminApproval() {
                               >
                                 <img src={link} alt="Work" className="w-full h-full object-cover" />
                               </button>
+                            ))}
                           </div>
                         )}
                       </div>
