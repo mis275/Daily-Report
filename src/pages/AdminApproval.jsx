@@ -20,6 +20,16 @@ import {
 import { useAuthStore } from '../store/authStore';
 import { formatDate } from '../utils/helpers';
 
+const getDirectDriveLink = (url) => {
+  if (!url) return '';
+  // Convert uc?id= or open?id= to lh3.googleusercontent.com/d/ format which is more reliable for direct <img> tags
+  const match = url.match(/[?&]id=([^&]+)/);
+  if (match && match[1]) {
+    return `https://lh3.googleusercontent.com/d/${match[1]}`;
+  }
+  return url;
+};
+
 export default function AdminApproval() {
   const { user } = useAuthStore();
   const [reports, setReports] = useState([]);
@@ -661,7 +671,7 @@ export default function AdminApproval() {
                                 onClick={() => setPreviewImage(link)}
                                 className="block w-20 h-20 rounded-lg overflow-hidden border border-indigo-200 hover:ring-2 hover:ring-indigo-400 transition shadow-sm"
                               >
-                                <img src={link} alt="Work" className="w-full h-full object-cover" />
+                                <img src={getDirectDriveLink(link)} alt="Work" className="w-full h-full object-cover" />
                               </button>
                             ))}
                           </div>
@@ -707,7 +717,7 @@ export default function AdminApproval() {
             <X size={32} />
           </button>
           <img 
-            src={previewImage} 
+            src={getDirectDriveLink(previewImage)} 
             alt="Preview" 
             className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
