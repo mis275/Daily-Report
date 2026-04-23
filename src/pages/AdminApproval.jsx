@@ -45,6 +45,7 @@ export default function AdminApproval() {
   // View Modal State
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const API_URL = import.meta.env.VITE_APPS_SCRIPT_URL;
   const REPORT_SHEET = (import.meta.env.VITE_DAILY_REPORT_SHEET_NAME || 'Daily Report').replace(/"/g, '');
@@ -654,11 +655,13 @@ export default function AdminApproval() {
                         <p className="text-sm text-gray-700 leading-relaxed font-medium">{line}</p>
                         {detailImages.length > 0 && (
                           <div className="flex flex-wrap gap-2">
-                            {detailImages.map((link, imgIdx) => (
-                              <a key={imgIdx} href={link} target="_blank" rel="noopener noreferrer" className="block w-20 h-20 rounded-lg overflow-hidden border border-indigo-200 hover:opacity-80 transition shadow-sm">
+                              <button 
+                                key={imgIdx} 
+                                onClick={() => setPreviewImage(link)}
+                                className="block w-20 h-20 rounded-lg overflow-hidden border border-indigo-200 hover:ring-2 hover:ring-indigo-400 transition shadow-sm"
+                              >
                                 <img src={link} alt="Work" className="w-full h-full object-cover" />
-                              </a>
-                            ))}
+                              </button>
                           </div>
                         )}
                       </div>
@@ -686,6 +689,29 @@ export default function AdminApproval() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+        </div>
+      )}
+
+      {/* Full Image Preview Modal */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200"
+          onClick={() => setPreviewImage(null)}
+        >
+          <button 
+            className="absolute top-4 right-4 text-white/70 hover:text-white transition p-2"
+            onClick={() => setPreviewImage(null)}
+          >
+            <X size={32} />
+          </button>
+          <img 
+            src={previewImage} 
+            alt="Preview" 
+            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
