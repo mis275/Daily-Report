@@ -865,8 +865,6 @@ export default function DailyReport() {
           </div>
         </div>
       )}
-        </div>
-      )}
 
       {/* Full Image Preview Modal */}
       {previewImage && (

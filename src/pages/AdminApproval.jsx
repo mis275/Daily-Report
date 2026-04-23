@@ -691,8 +691,6 @@ export default function AdminApproval() {
           </div>
         </div>
       )}
-        </div>
-      )}
 
       {/* Full Image Preview Modal */}
       {previewImage && (
