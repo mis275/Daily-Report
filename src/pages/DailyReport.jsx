@@ -264,6 +264,9 @@ export default function DailyReport() {
   };
 
   const filteredReports = reports.filter(rpt => {
+    // Security: Only show data matching the logged-in user's Employee ID
+    if (user?.empId && rpt.empId !== user.empId) return false;
+
     if (filters.fromDate && rpt.date < filters.fromDate) return false;
     if (filters.toDate && rpt.date > filters.toDate) return false;
     if (filters.personName && rpt.name !== filters.personName) return false;
