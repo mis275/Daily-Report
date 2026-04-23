@@ -77,7 +77,8 @@ export default function AdminApproval() {
             colJ: row[9],       // J (Condition: J != Null)
             colK: row[10],      // K (Processed flag: Null=Pending, Not Null=History)
             approveBy: row[12], // M
-            status: row[13]     // N
+            status: row[13],    // N
+            imageLinks: row[14] ? JSON.parse(row[14]) : [] // O
           }))
           .filter(rpt => rpt.sn && rpt.sn !== ''); // Filter after mapping to preserve rowIndex
         setReports(formattedReports);
@@ -639,16 +640,30 @@ export default function AdminApproval() {
                 </div>
               </div>
 
-              {/* Work Details List */}
-              <div className="space-y-3">
+              {/* Work Details & Images */}
+              <div className="space-y-4">
                 <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2">
                   <FileText size={16} className="text-indigo-600" />
-                  Working Details
+                  Working Details & Images
                 </h4>
-                <div className="bg-indigo-50/30 rounded-xl border border-indigo-100 p-4">
-                  <div className="whitespace-pre-line text-sm text-gray-700 leading-relaxed font-medium">
-                    {selectedReport.details}
-                  </div>
+                <div className="space-y-3">
+                  {selectedReport.details.split('\n').map((line, idx) => {
+                    const detailImages = selectedReport.imageLinks && selectedReport.imageLinks[idx] ? selectedReport.imageLinks[idx] : [];
+                    return (
+                      <div key={idx} className="bg-indigo-50/30 rounded-xl border border-indigo-100 p-4 space-y-3">
+                        <p className="text-sm text-gray-700 leading-relaxed font-medium">{line}</p>
+                        {detailImages.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {detailImages.map((link, imgIdx) => (
+                              <a key={imgIdx} href={link} target="_blank" rel="noopener noreferrer" className="block w-20 h-20 rounded-lg overflow-hidden border border-indigo-200 hover:opacity-80 transition shadow-sm">
+                                <img src={link} alt="Work" className="w-full h-full object-cover" />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

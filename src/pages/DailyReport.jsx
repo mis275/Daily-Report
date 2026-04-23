@@ -30,7 +30,7 @@ export default function DailyReport() {
     employeeId: user?.empId || '',
     date: new Date().toISOString().split('T')[0],
     status: 'Full Day',
-    details: [''],
+    details: [{ text: '', images: [] }],
     location: '',
     remarks: ''
   });
@@ -69,7 +69,8 @@ export default function DailyReport() {
             status: row[5],
             details: row[6],
             location: row[7],
-            remarks: row[8]
+            remarks: row[8],
+            imageLinks: row[14] ? JSON.parse(row[14]) : []
           }));
         setReports(formattedReports);
       }
@@ -128,6 +129,44 @@ export default function DailyReport() {
     });
   };
 
+  const handleImageChange = async (e, detailIndex) => {
+    const files = Array.from(e.target.files);
+    const newImages = await Promise.all(files.map(async (file) => {
+      const base64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+      return {
+        name: file.name,
+        type: file.type,
+        base64: base64.split(',')[1] // Remove the prefix
+      };
+    }));
+
+    setFormData(prev => {
+      const newDetails = [...prev.details];
+      newDetails[detailIndex] = {
+        ...newDetails[detailIndex],
+        images: [...newDetails[detailIndex].images, ...newImages]
+      };
+      return { ...prev, details: newDetails };
+    });
+  };
+
+  const removeImage = (detailIndex, imgIndex) => {
+    setFormData(prev => {
+      const newDetails = [...prev.details];
+      newDetails[detailIndex] = {
+        ...newDetails[detailIndex],
+        images: newDetails[detailIndex].images.filter((_, i) => i !== imgIndex)
+      };
+      return { ...prev, details: newDetails };
+    });
+  };
+
+  const FOLDER_ID = "1bV1AvkFLm5mRsR_Ojxy36LOE7xXClfeJ";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -136,30 +175,68 @@ export default function DailyReport() {
       const timestamp = getIndiaTime();
       const sn = generateSN();
 
+      // 1. Upload Images for each detail item first
+      const imageLinksMapping = await Promise.all(formData.details.map(async (detail, dIdx) => {
+        if (!detail.images || detail.images.length === 0) return [];
+
+        const uploadedUrls = await Promise.all(detail.images.map(async (img) => {
+          const uploadParams = new URLSearchParams();
+          uploadParams.append('action', 'uploadFile');
+          uploadParams.append('base64Data', img.base64);
+          uploadParams.append('fileName', img.name);
+          uploadParams.append('mimeType', img.type);
+          uploadParams.append('folderId', FOLDER_ID);
+
+          const uploadResp = await fetch(API_URL, {
+            method: 'POST',
+            body: uploadParams.toString(),
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }
+          });
+          const uploadResult = await uploadResp.json();
+          if (!uploadResult.success) throw new Error(uploadResult.error || "Image upload failed");
+          return uploadResult.fileUrl;
+        }));
+        return uploadedUrls;
+      }));
+
+      // 2. Construct the final row data
       const rowData = [
         timestamp,         // A
         sn,                // B
         formData.employeeId, // C
         formData.personName, // D
-        formData.date.replace(/-/g, '/'),     // E: Store as YYYY/MM/DD
+        formData.date.replace(/-/g, '/'), // E
         formData.status,   // F
-        Array.isArray(formData.details) ? formData.details.filter(d => d.trim() !== '').map((d, i) => `${i + 1}. ${d}`).join('\n') : '',  // G: Joined with numbers and newlines
+        formData.details.filter(d => d.text.trim() !== '').map((d, i) => `${i + 1}. ${d.text}`).join('\n'), // G
         formData.location, // H
-        formData.remarks   // I
+        formData.remarks,  // I
+        "", "", "", "", "", // J, K, L, M, N (Empty placeholders)
+        JSON.stringify(imageLinksMapping) // O: The JSON array of image links
       ];
 
-      const resp = await fetch(`${API_URL}?action=insert&sheetName=${REPORT_SHEET}&rowData=${JSON.stringify(rowData)}`, {
-        method: 'POST'
+      // 3. Send the final row insertion request
+      const insertParams = new URLSearchParams();
+      insertParams.append('action', 'insert');
+      insertParams.append('sheetName', REPORT_SHEET);
+      insertParams.append('rowData', JSON.stringify(rowData));
+
+      const resp = await fetch(API_URL, {
+        method: 'POST',
+        body: insertParams.toString(),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        }
       });
       const result = await resp.json();
 
       if (result.success) {
         toast.success(`Report ${sn} saved successfully!`);
         setShowFormModal(false);
-        // Reset form
         setFormData({
           ...formData,
-          details: [''],
+          details: [{ text: '', images: [] }],
           location: '',
           remarks: ''
         });
@@ -294,20 +371,18 @@ export default function DailyReport() {
                   className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex cursor-pointer active:scale-[0.98] transition-all hover:shadow-md"
                 >
                   {/* Left Status Stripe */}
-                  <div className={`w-1.5 flex-shrink-0 ${
-                    rpt.status === 'Full Day' ? 'bg-green-500' :
-                    rpt.status === 'Half Day' ? 'bg-amber-500' : 'bg-red-500'
-                  }`} />
+                  <div className={`w-1.5 flex-shrink-0 ${rpt.status === 'Full Day' ? 'bg-green-500' :
+                      rpt.status === 'Half Day' ? 'bg-amber-500' : 'bg-red-500'
+                    }`} />
 
                   {/* Card Content */}
                   <div className="flex-1 p-3 flex flex-col gap-2 min-w-0">
                     {/* Top Row: SN + Status Badge */}
                     <div className="flex justify-between items-center">
                       <span className="text-[11px] font-black text-indigo-800 tracking-wider font-mono">{rpt.sn}</span>
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${
-                        rpt.status === 'Full Day' ? 'bg-green-100 text-green-700' :
-                        rpt.status === 'Half Day' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${rpt.status === 'Full Day' ? 'bg-green-100 text-green-700' :
+                          rpt.status === 'Half Day' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                        }`}>
                         {rpt.status}
                       </span>
                     </div>
@@ -569,25 +644,16 @@ export default function DailyReport() {
                     </span>
                   </div>
 
-                  <div className="space-y-3">
-                    {Array.isArray(formData.details) && formData.details.map((detail, index) => (
-                      <div key={index} className="relative group">
-                        <div className="flex gap-2">
-                          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold mt-2">
-                            {index + 1}
+                  <div className="space-y-4">
+                    {formData.details.map((detail, index) => (
+                      <div key={index} className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
+                              {index + 1}
+                            </div>
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Detail Item</span>
                           </div>
-                          <textarea
-                            rows="2"
-                            placeholder={index === 0 ? "Describe your main activity..." : "Add another task detail..."}
-                            value={detail}
-                            onChange={(e) => {
-                              const newDetails = [...formData.details];
-                              newDetails[index] = e.target.value;
-                              setFormData({ ...formData, details: newDetails });
-                            }}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm"
-                            required={index === 0}
-                          />
                           {index > 0 && (
                             <button
                               type="button"
@@ -595,22 +661,68 @@ export default function DailyReport() {
                                 const newDetails = formData.details.filter((_, i) => i !== index);
                                 setFormData({ ...formData, details: newDetails });
                               }}
-                              className="bg-red-50 text-red-500 hover:bg-red-100 p-2 rounded-lg transition h-fit mt-2"
-                              title="Remove item"
+                              className="text-red-500 hover:text-red-700 p-1 transition"
                             >
                               <X size={16} />
                             </button>
                           )}
                         </div>
+
+                        <textarea
+                          rows="2"
+                          placeholder={index === 0 ? "Describe your main activity..." : "Add another task detail..."}
+                          value={detail.text}
+                          onChange={(e) => {
+                            const newDetails = [...formData.details];
+                            newDetails[index].text = e.target.value;
+                            setFormData({ ...formData, details: newDetails });
+                          }}
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm bg-white"
+                          required={index === 0}
+                        />
+
+                        {/* Image Upload for this detail */}
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap gap-2">
+                            {detail.images.map((img, imgIdx) => (
+                              <div key={imgIdx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300 shadow-sm">
+                                <img
+                                  src={`data:image/png;base64,${img.base64}`}
+                                  alt="preview"
+                                  className="w-full h-full object-cover"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => removeImage(index, imgIdx)}
+                                  className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg p-0.5"
+                                >
+                                  <X size={10} />
+                                </button>
+                              </div>
+                            ))}
+                            {detail.images.length < 3 && (
+                              <label className="w-16 h-16 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 transition bg-white">
+                                <Plus size={16} className="text-gray-400" />
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept="image/*"
+                                  multiple
+                                  onChange={(e) => handleImageChange(e, index)}
+                                />
+                              </label>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
 
-                  {Array.isArray(formData.details) && formData.details.length < 10 && (
+                  {formData.details.length < 10 && (
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, details: [...(Array.isArray(formData.details) ? formData.details : []), ''] })}
-                      className="w-full py-2 border-2 border-dashed border-indigo-200 rounded-lg text-indigo-600 font-bold text-sm hover:bg-indigo-50 hover:border-indigo-400 transition flex items-center justify-center gap-2 mt-2"
+                      onClick={() => setFormData({ ...formData, details: [...formData.details, { text: '', images: [] }] })}
+                      className="w-full py-2 border-2 border-dashed border-indigo-200 rounded-lg text-indigo-600 font-bold text-sm hover:bg-indigo-50 hover:border-indigo-400 transition flex items-center justify-center gap-2"
                     >
                       <Plus size={16} />
                       Add More Details
@@ -702,16 +814,30 @@ export default function DailyReport() {
                 </div>
               </div>
 
-              {/* Work Details List */}
-              <div className="space-y-3">
+              {/* Work Details & Images */}
+              <div className="space-y-4">
                 <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2">
                   <FileText size={16} className="text-indigo-600" />
-                  Working Details
+                  Working Details & Images
                 </h4>
-                <div className="bg-indigo-50/30 rounded-xl border border-indigo-100 p-4">
-                  <div className="whitespace-pre-line text-sm text-gray-700 leading-relaxed font-medium">
-                    {selectedReport.details}
-                  </div>
+                <div className="space-y-3">
+                  {selectedReport.details.split('\n').map((line, idx) => {
+                    const detailImages = selectedReport.imageLinks && selectedReport.imageLinks[idx] ? selectedReport.imageLinks[idx] : [];
+                    return (
+                      <div key={idx} className="bg-indigo-50/30 rounded-xl border border-indigo-100 p-4 space-y-3">
+                        <p className="text-sm text-gray-700 leading-relaxed font-medium">{line}</p>
+                        {detailImages.length > 0 && (
+                          <div className="flex flex-wrap gap-2">
+                            {detailImages.map((link, imgIdx) => (
+                              <a key={imgIdx} href={link} target="_blank" rel="noopener noreferrer" className="block w-20 h-20 rounded-lg overflow-hidden border border-indigo-200 hover:opacity-80 transition shadow-sm">
+                                <img src={link} alt="Work" className="w-full h-full object-cover" />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
