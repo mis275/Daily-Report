@@ -99,3 +99,36 @@ table th, table td {
 .p-4 {
   padding: 0.75rem !important;
 }
+
+/* ── iOS / Android Mobile Fixes ─────────────────────────────────────── */
+
+/* Safe-area bottom padding utility (for footer / fixed bars on notch devices) */
+.pb-safe-area {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.625rem);
+}
+
+/* Prevent iOS Safari from zooming in when focusing small inputs.
+   Input font-size must be ≥ 16px to suppress auto-zoom. */
+@media (max-width: 639px) {
+  input[type="text"],
+  input[type="date"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Momentum (inertia) scrolling on iOS for any overflow-y container */
+.overflow-y-auto,
+.overflow-y-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Remove tap highlight flash on Android / iOS */
+* {
+  -webkit-tap-highlight-color: transparent;
+}

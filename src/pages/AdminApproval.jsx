@@ -246,33 +246,46 @@ export default function AdminApproval() {
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header & Filter Row */}
-      <div className="flex flex-col md:flex-row items-center gap-3 w-full overflow-x-auto pb-4 border-b border-gray-100">
-        {/* Tabs */}
-        <div className="flex gap-1 flex-shrink-0 mr-4 bg-gray-100 p-1 rounded-lg">
-          <button
-            onClick={() => { setActiveTab('pending'); setSelectedIds([]); }}
-            className={`py-1.5 px-4 font-bold transition text-sm rounded-md flex items-center gap-2 ${activeTab === 'pending'
-              ? 'bg-white text-indigo-700 shadow-sm'
-              : 'text-gray-500 hover:text-indigo-600'
-              }`}
-          >
-            Pending <span className="bg-indigo-100 px-1.5 py-0.5 rounded text-[10px]">{pendingReports.length}</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab('history'); setSelectedIds([]); }}
-            className={`py-1.5 px-4 font-bold transition text-sm rounded-md flex items-center gap-2 ${activeTab === 'history'
-              ? 'bg-white text-indigo-700 shadow-sm'
-              : 'text-gray-500 hover:text-indigo-600'
-              }`}
-          >
-            History <span className="bg-gray-200 px-1.5 py-0.5 rounded text-[10px]">{historyReports.length}</span>
-          </button>
+      <div className="flex flex-col gap-3 pb-4 border-b border-gray-100">
+        {/* Row 1: Tabs + Submit button */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => { setActiveTab('pending'); setSelectedIds([]); }}
+              className={`py-1.5 px-4 font-bold transition text-sm rounded-md flex items-center gap-2 ${activeTab === 'pending'
+                ? 'bg-white text-indigo-700 shadow-sm'
+                : 'text-gray-500 hover:text-indigo-600'
+                }`}
+            >
+              Pending <span className="bg-indigo-100 px-1.5 py-0.5 rounded text-[10px]">{pendingReports.length}</span>
+            </button>
+            <button
+              onClick={() => { setActiveTab('history'); setSelectedIds([]); }}
+              className={`py-1.5 px-4 font-bold transition text-sm rounded-md flex items-center gap-2 ${activeTab === 'history'
+                ? 'bg-white text-indigo-700 shadow-sm'
+                : 'text-gray-500 hover:text-indigo-600'
+                }`}
+            >
+              History <span className="bg-gray-200 px-1.5 py-0.5 rounded text-[10px]">{historyReports.length}</span>
+            </button>
+          </div>
+
+          {activeTab === 'pending' && selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkSubmit}
+              disabled={loading}
+              className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition shadow-lg text-sm animate-in zoom-in-95"
+            >
+              <Save size={16} />
+              {loading ? 'Processing...' : `Submit (${selectedIds.length})`}
+            </button>
+          )}
         </div>
 
-        {/* Global Search */}
-        <div className="relative flex-1 min-w-[200px]">
+        {/* Row 2: Global Search */}
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
           <input
             type="text"
@@ -283,40 +296,29 @@ export default function AdminApproval() {
           />
         </div>
 
-        {/* Simple Filters */}
-        <div className="flex gap-2">
+        {/* Row 3: Date Filters */}
+        <div className="grid grid-cols-2 gap-2">
           <input
             type="date"
             value={filters.fromDate}
             onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })}
-            className="bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all"
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all"
             title="From Date"
           />
           <input
             type="date"
             value={filters.toDate}
             onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
-            className="bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all"
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all"
             title="To Date"
           />
         </div>
-
-        {activeTab === 'pending' && selectedIds.length > 0 && (
-          <button
-            onClick={handleBulkSubmit}
-            disabled={loading}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition shadow-lg animate-in zoom-in-95"
-          >
-            <Save size={18} />
-            {loading ? 'Processing...' : `Approve Selected (${selectedIds.length})`}
-          </button>
-        )}
       </div>
 
       {/* Main Content Area */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col overflow-hidden min-h-[500px]">
         {/* Mobile View: Card List */}
-        <div className="md:hidden flex flex-col gap-3 p-3 overflow-y-auto h-[calc(100vh-380px)] min-h-[350px] bg-gray-50/50">
+        <div className="md:hidden flex flex-col gap-4 p-3 overflow-y-auto bg-gray-50/50" style={{ maxHeight: '65vh', minHeight: '200px' }}>
           {fetching ? (
             <div className="flex-1 flex flex-col items-center justify-center py-20 space-y-4">
               <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -327,94 +329,130 @@ export default function AdminApproval() {
               {paginatedReports.map((rpt, idx) => (
                 <div
                   key={idx}
-                  className={`bg-white rounded-xl border transition-all duration-200 shadow-sm overflow-hidden flex flex-col ${activeTab === 'pending' && selectedIds.includes(rpt.sn) ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-gray-200'
-                    }`}
                   onClick={() => activeTab === 'pending' && handleSelectRow(rpt.sn)}
+                  className={`flex-shrink-0 bg-white rounded-2xl border transition-all duration-200 shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] ${
+                    activeTab === 'pending' && selectedIds.includes(rpt.sn)
+                      ? 'border-indigo-400 ring-2 ring-indigo-300'
+                      : 'border-gray-200 hover:shadow-md'
+                  }`}
                 >
-                  {/* Card Header */}
-                  <div className={`px-4 py-2 border-b flex justify-between items-center ${activeTab === 'pending' && selectedIds.includes(rpt.sn) ? 'bg-indigo-50 border-indigo-100' : 'bg-gray-50 border-gray-100'
-                    }`}>
-                    <div className="flex items-center gap-2">
-                      {activeTab === 'pending' && (
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedIds.includes(rpt.sn) ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-300'
+                  {/* Top Status Stripe */}
+                  <div className={`h-1.5 w-full ${
+                    rpt.opStatus === 'Full Day' ? 'bg-green-500' :
+                    rpt.opStatus === 'Half Day' ? 'bg-amber-500' : 'bg-red-500'
+                  }`} />
+
+                  <div className="p-4" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+                    {/* Row 1: Checkbox + SN + Approve/Status */}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        {activeTab === 'pending' && (
+                          <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
+                            selectedIds.includes(rpt.sn)
+                              ? 'bg-indigo-600 border-indigo-600 text-white'
+                              : 'bg-white border-gray-300'
                           }`}>
-                          {selectedIds.includes(rpt.sn) && <Check size={12} strokeWidth={4} />}
-                        </div>
-                      )}
-                      <span className="text-xs font-black text-indigo-900 tracking-wider">{rpt.sn}</span>
-                    </div>
+                            {selectedIds.includes(rpt.sn) && <Check size={14} strokeWidth={4} />}
+                          </div>
+                        )}
+                        <span className="text-sm font-black text-indigo-800 tracking-widest font-mono">{rpt.sn}</span>
+                      </div>
 
-                    {activeTab === 'history' ? (
-                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${rpt.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      {activeTab === 'history' ? (
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase flex items-center gap-1.5 ${
+                          rpt.status === 'Approved' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                         }`}>
-                        {rpt.status}
-                      </span>
-                    ) : (
-                      <select
-                        onClick={(e) => e.stopPropagation()}
-                        disabled={!selectedIds.includes(rpt.sn)}
-                        value={rowStatuses[rpt.sn] || 'Approved'}
-                        onChange={(e) => setRowStatuses({ ...rowStatuses, [rpt.sn]: e.target.value })}
-                        className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border ${!selectedIds.includes(rpt.sn)
-                            ? 'bg-gray-100 border-gray-200 text-gray-400 opacity-50'
-                            : 'bg-white border-indigo-200 text-indigo-700'
+                          {rpt.status === 'Approved' ? <CheckCircle size={12} /> : <XCircle size={12} />}
+                          {rpt.status}
+                        </span>
+                      ) : (
+                        <select
+                          onClick={(e) => e.stopPropagation()}
+                          disabled={!selectedIds.includes(rpt.sn)}
+                          value={rowStatuses[rpt.sn] || 'Approved'}
+                          onChange={(e) => setRowStatuses({ ...rowStatuses, [rpt.sn]: e.target.value })}
+                          className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
+                            !selectedIds.includes(rpt.sn)
+                              ? 'bg-gray-50 border-gray-200 text-gray-400 opacity-60'
+                              : rowStatuses[rpt.sn] === 'Rejected'
+                                ? 'bg-red-50 border-red-300 text-red-600'
+                                : 'bg-green-50 border-green-300 text-green-700'
                           }`}
-                      >
-                        <option value="Approved">Approve</option>
-                        <option value="Rejected">Reject</option>
-                      </select>
-                    )}
-                  </div>
+                        >
+                          <option value="Approved">Approve</option>
+                          <option value="Rejected">Reject</option>
+                        </select>
+                      )}
+                    </div>
 
-                  {/* Card Body */}
-                  <div className="p-4 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
-                          <User size={16} />
-                        </div>
-                        <div>
-                          <p className="text-xs font-black text-gray-900 uppercase tracking-tight leading-none mb-1">{rpt.name}</p>
-                          <p className="text-[9px] font-bold text-gray-400 flex items-center gap-1 uppercase">
-                            <Calendar size={10} /> {rpt.date ? formatDate(rpt.date) : '-'}
-                          </p>
-                        </div>
+                    <div className="h-px bg-gray-100" />
+
+                    {/* Row 2: Person avatar + Name + Date */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 border-2 border-indigo-100 flex-shrink-0">
+                        <User size={20} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-base font-black text-gray-900 uppercase tracking-tight truncate leading-tight">{rpt.name}</p>
+                        <span className="flex items-center gap-1.5 text-xs text-gray-500 font-bold mt-1">
+                          <Calendar size={12} className="text-indigo-400 flex-shrink-0" />
+                          {rpt.date ? formatDate(rpt.date) : '-'}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-[10px]">
-                      <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
-                        <p className="text-gray-400 font-bold uppercase mb-0.5 tracking-tighter">Status</p>
-                        <p className="font-bold text-gray-700 uppercase">{rpt.opStatus}</p>
+                    {/* Row 3: Op Status + Location */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className={`rounded-xl px-3 py-2.5 border ${
+                        rpt.opStatus === 'Full Day' ? 'bg-green-50 border-green-100' :
+                        rpt.opStatus === 'Half Day' ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'
+                      }`}>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Op Status</p>
+                        <p className={`text-xs font-black uppercase ${
+                          rpt.opStatus === 'Full Day' ? 'text-green-700' :
+                          rpt.opStatus === 'Half Day' ? 'text-amber-700' : 'text-red-700'
+                        }`}>{rpt.opStatus || '-'}</p>
                       </div>
-                      <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
-                        <p className="text-gray-400 font-bold uppercase mb-0.5 tracking-tighter">Location</p>
-                        <p className="font-bold text-indigo-600 uppercase truncate">{rpt.location}</p>
+                      <div className="bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Location</p>
+                        <p className="text-xs font-black text-indigo-700 uppercase truncate flex items-center gap-1">
+                          <MapPin size={11} className="flex-shrink-0" />
+                          {rpt.location || '-'}
+                        </p>
                       </div>
                     </div>
 
-                    {activeTab === 'history' && (
-                      <div className="bg-indigo-50/50 p-2 rounded-lg border border-indigo-100 flex justify-between items-center">
-                        <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-tighter">Approve By</span>
-                        <span className="text-[10px] font-bold text-indigo-900 uppercase">{rpt.approveBy || '-'}</span>
+                    {/* Row 4: Work Details */}
+                    {rpt.details && (
+                      <div className="bg-indigo-50/40 rounded-xl px-3 py-3 border border-indigo-100">
+                        <p className="text-[10px] font-bold text-indigo-400 uppercase mb-1.5">Work Details</p>
+                        <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">{rpt.details}</p>
                       </div>
                     )}
 
-                    <div className="flex justify-between items-end gap-2 pt-1">
-                      <div className="flex-1">
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mb-1">Activity</p>
-                        <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed h-[36px]">{rpt.details}</p>
-                      </div>
+                    {/* Row 5: Remarks */}
+                    {rpt.remarks && (
+                      <p className="text-xs text-gray-400 italic border-l-2 border-gray-200 pl-3">{rpt.remarks}</p>
+                    )}
+
+                    {/* Row 6: Approved By (history) + View All button */}
+                    <div className="flex justify-between items-center gap-3">
+                      {activeTab === 'history' ? (
+                        <div className="bg-indigo-50 rounded-xl px-3 py-2 border border-indigo-100 flex-1">
+                          <p className="text-[10px] font-bold text-indigo-300 uppercase">Approved By</p>
+                          <p className="text-sm font-bold text-indigo-900 uppercase truncate">{rpt.approveBy || '-'}</p>
+                        </div>
+                      ) : <div className="flex-1" />}
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewDetails(rpt);
-                        }}
-                        className="flex-shrink-0 bg-indigo-50 p-2 rounded-lg text-indigo-600 hover:bg-indigo-100"
+                        onClick={(e) => { e.stopPropagation(); handleViewDetails(rpt); }}
+                        className="flex-shrink-0 flex items-center gap-2 bg-indigo-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition"
                       >
-                        <FileText size={18} />
+                        <FileText size={14} />
+                        View All
                       </button>
                     </div>
+
                   </div>
                 </div>
               ))}

@@ -32,7 +32,7 @@ const Layout = () => {
         )}
 
         {/* Page Content */}
-        <main className="flex-1 p-2 sm:p-2 lg:p-4 overflow-y-auto pb-14">
+        <main className="flex-1 p-2 sm:p-2 lg:p-4 overflow-y-auto pb-20">
           <div className="max-w-7xl mx-auto w-full animate-in fade-in duration-500">
             <Outlet />
           </div>

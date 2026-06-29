@@ -136,11 +136,11 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header & Quick Action */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 uppercase tracking-tight">Admin Dashboard</h1>
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 uppercase tracking-tight">Admin Dashboard</h1>
           <p className="text-xs font-bold text-sky-600 uppercase tracking-widest mt-1">Real-Time Reporting Overview</p>
         </div>
         <button 
@@ -243,8 +243,8 @@ export default function AdminDashboard() {
       </div>
 
       {/* Filter Row */}
-      <div className="flex flex-col md:flex-row items-center gap-3 pb-4 border-b border-gray-100">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-3 pb-4 border-b border-gray-100">
+        <div className="relative w-full">
           <input
             type="text"
             placeholder="Search recent reports..."
@@ -253,19 +253,19 @@ export default function AdminDashboard() {
             className="w-full bg-white border border-gray-300 rounded-lg pl-4 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm shadow-sm"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
           <input
             type="date"
             value={filters.dateFrom}
             onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-            className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
           />
           <input
             type="text"
             placeholder="Filter location..."
             value={filters.location}
             onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-            className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
+            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm shadow-sm focus:ring-2 focus:ring-sky-500 focus:outline-none"
           />
         </div>
       </div>
@@ -278,45 +278,61 @@ export default function AdminDashboard() {
         </div>
 
         {/* Mobile View: Activity Cards */}
-        <div className="md:hidden flex flex-col gap-3 p-3 bg-gray-50/50 overflow-y-auto max-h-[500px]">
+        <div className="md:hidden flex flex-col gap-4 p-3 bg-gray-50/50 overflow-y-auto" style={{ maxHeight: '65vh', minHeight: '200px' }}>
           {paginatedItems.map((rpt, idx) => (
-            <div key={idx} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-3">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600">
-                    <User size={16} />
+            <div key={idx} className="flex-shrink-0 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              {/* Status stripe */}
+              <div className={`h-1.5 w-full ${
+                rpt.opStatus === 'Full Day' ? 'bg-green-500' :
+                rpt.opStatus === 'Half Day' ? 'bg-amber-500' : 'bg-red-500'
+              }`} />
+              <div className="p-4" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {/* Top: Name + approval status */}
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-sky-50 flex items-center justify-center text-sky-600 border-2 border-sky-100 flex-shrink-0">
+                      <User size={20} />
+                    </div>
+                    <div>
+                      <p className="text-base font-black text-gray-900 uppercase tracking-tight leading-tight">{rpt.name}</p>
+                      <p className="text-xs font-bold text-gray-400 flex items-center gap-1.5 mt-0.5">
+                        <Clock size={12} className="text-sky-400" /> {rpt.date ? formatDate(rpt.date) : '-'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-black text-gray-900 uppercase tracking-tight leading-none mb-1">{rpt.name}</p>
-                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                      <Clock size={10} /> {rpt.date ? formatDate(rpt.date) : '-'}
-                    </p>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase flex-shrink-0 ${
+                    rpt.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                    rpt.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {rpt.status}
+                  </span>
+                </div>
+
+                {/* Op Status + Location */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className={`rounded-xl px-3 py-2.5 border ${
+                    rpt.opStatus === 'Full Day' ? 'bg-green-50 border-green-100' :
+                    rpt.opStatus === 'Half Day' ? 'bg-amber-50 border-amber-100' : 'bg-red-50 border-red-100'
+                  }`}>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Op Status</p>
+                    <p className={`text-xs font-black uppercase ${
+                      rpt.opStatus === 'Full Day' ? 'text-green-700' :
+                      rpt.opStatus === 'Half Day' ? 'text-amber-700' : 'text-red-700'
+                    }`}>{rpt.opStatus || '-'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
+                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Location</p>
+                    <p className="text-xs font-black text-indigo-600 uppercase truncate">{rpt.location || '-'}</p>
                   </div>
                 </div>
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                  rpt.status === 'Approved' ? 'bg-green-100 text-green-700' : 
-                  rpt.status === 'Rejected' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
-                }`}>
-                  {rpt.status}
-                </span>
-              </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
-                  <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5 tracking-tighter">Op Status</p>
-                  <p className="text-xs font-bold text-gray-700 uppercase">{rpt.opStatus}</p>
+                {/* SN + Remarks */}
+                <div className="flex items-center justify-between border-t border-gray-100 pt-2">
+                  <span className="text-sm font-black text-sky-600 tracking-widest font-mono">{rpt.sn}</span>
+                  <span className="text-xs font-bold text-gray-400 italic truncate max-w-[160px]">
+                    {rpt.remarks || 'No remarks'}
+                  </span>
                 </div>
-                <div className="bg-gray-50 p-2 rounded-lg border border-gray-100">
-                  <p className="text-[9px] text-gray-400 font-bold uppercase mb-0.5 tracking-tighter">Location</p>
-                  <p className="text-xs font-bold text-indigo-600 uppercase truncate">{rpt.location}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between border-t border-gray-50 pt-2">
-                <span className="text-[10px] font-black text-sky-600 tracking-widest">{rpt.sn}</span>
-                <span className="text-[9px] font-bold text-gray-400 uppercase italic truncate max-w-[150px]">
-                  {rpt.remarks || 'No remarks'}
-                </span>
               </div>
             </div>
           ))}

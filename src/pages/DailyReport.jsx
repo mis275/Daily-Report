@@ -293,7 +293,7 @@ export default function DailyReport() {
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header with Filters */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 md:gap-4 w-full">
         <div className="flex flex-col md:flex-row w-full gap-3">
@@ -339,7 +339,7 @@ export default function DailyReport() {
                 className="w-full bg-white border border-gray-300 rounded-lg md:rounded px-2 md:px-3 py-2 md:py-1.5 focus:outline-none focus:border-sky-500 text-sm"
               />
             </div>
-            <div>
+            <div className="col-span-2 md:col-span-1">
               <select
                 value={filters.personName}
                 onChange={(e) => setFilters({ ...filters, personName: e.target.value })}
@@ -367,7 +367,7 @@ export default function DailyReport() {
       {/* List Section */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col mt-4">
         {/* Mobile View: Cards */}
-        <div className="md:hidden flex flex-col gap-3 p-3 overflow-y-auto h-[calc(100vh-380px)] min-h-[300px] bg-gray-50/50">
+        <div className="md:hidden flex flex-col gap-4 p-3 overflow-y-auto bg-gray-50/50" style={{ maxHeight: '65vh', minHeight: '200px' }}>
           {fetching ? (
             <div className="flex-1 flex flex-col items-center justify-center py-20 space-y-4">
               <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -382,41 +382,43 @@ export default function DailyReport() {
                     setSelectedReport(rpt);
                     setShowViewModal(true);
                   }}
-                  className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex cursor-pointer active:scale-[0.98] transition-all hover:shadow-md"
+                  className="flex-shrink-0 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-all hover:shadow-md"
                 >
-                  {/* Left Status Stripe */}
-                  <div className={`w-1.5 flex-shrink-0 ${rpt.status === 'Full Day' ? 'bg-green-500' :
+                  {/* Top Status Stripe */}
+                  <div className={`h-1.5 w-full ${rpt.status === 'Full Day' ? 'bg-green-500' :
                       rpt.status === 'Half Day' ? 'bg-amber-500' : 'bg-red-500'
                     }`} />
 
                   {/* Card Content */}
-                  <div className="flex-1 p-3 flex flex-col gap-2 min-w-0">
+                  <div className="p-4" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {/* Top Row: SN + Status Badge */}
                     <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-black text-indigo-800 tracking-wider font-mono">{rpt.sn}</span>
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${rpt.status === 'Full Day' ? 'bg-green-100 text-green-700' :
+                      <span className="text-sm font-black text-indigo-800 tracking-widest font-mono">{rpt.sn}</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wide ${rpt.status === 'Full Day' ? 'bg-green-100 text-green-700' :
                           rpt.status === 'Half Day' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
                         }`}>
                         {rpt.status}
                       </span>
                     </div>
 
-                    {/* Middle Row: User + Date */}
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 flex-shrink-0">
-                        <User size={15} />
+                    <div className="h-px bg-gray-100" />
+
+                    {/* Middle Row: User + Date + Location */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border-2 border-indigo-100 flex-shrink-0">
+                        <User size={20} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-black text-gray-900 text-sm uppercase tracking-tight leading-tight truncate">{rpt.name}</h3>
-                        <div className="flex items-center gap-3 mt-0.5">
-                          <span className="flex items-center gap-1 text-[10px] text-gray-500 font-bold">
-                            <Calendar size={10} className="text-indigo-400" />
+                        <h3 className="font-black text-gray-900 text-base uppercase tracking-tight leading-tight truncate">{rpt.name}</h3>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                          <span className="flex items-center gap-1 text-xs text-gray-500 font-bold">
+                            <Calendar size={12} className="text-indigo-400" />
                             {rpt.date ? formatDate(rpt.date) : '-'}
                           </span>
                           {rpt.location && (
-                            <span className="flex items-center gap-1 text-[10px] text-gray-500 font-bold truncate">
-                              <MapPin size={10} className="text-gray-400" />
-                              <span className="truncate">{rpt.location}</span>
+                            <span className="flex items-center gap-1 text-xs text-gray-500 font-bold">
+                              <MapPin size={12} className="text-gray-400" />
+                              <span className="truncate max-w-[120px]">{rpt.location}</span>
                             </span>
                           )}
                         </div>
@@ -425,9 +427,10 @@ export default function DailyReport() {
 
                     {/* Bottom Row: Work Preview */}
                     {rpt.details && (
-                      <p className="text-[11px] text-gray-500 leading-snug line-clamp-1 italic pl-[42px]">
-                        {rpt.details}
-                      </p>
+                      <div className="bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-100">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Work Details</p>
+                        <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">{rpt.details}</p>
+                      </div>
                     )}
                   </div>
                 </div>
