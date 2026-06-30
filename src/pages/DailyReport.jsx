@@ -367,7 +367,7 @@ export default function DailyReport() {
       {/* List Section */}
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col mt-4">
         {/* Mobile View: Cards */}
-        <div className="md:hidden flex flex-col gap-4 p-3 overflow-y-auto bg-gray-50/50" style={{ maxHeight: '65vh', minHeight: '200px' }}>
+        <div className="md:hidden flex flex-col gap-4 p-3 bg-gray-50/50">
           {fetching ? (
             <div className="flex-1 flex flex-col items-center justify-center py-20 space-y-4">
               <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
@@ -569,9 +569,9 @@ export default function DailyReport() {
 
       {/* Form Modal */}
       {showFormModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50 sm:p-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-md h-full sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden">
-            <form onSubmit={handleSubmit} className="flex flex-col h-full overflow-hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-end sm:justify-center z-50 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-md h-auto max-h-[92dvh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden">
+            <form onSubmit={handleSubmit} className="flex flex-col min-h-0 overflow-hidden">
               {/* Header - Fixed */}
               <div className="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50 flex-shrink-0">
                 <h2 className="text-xl font-bold text-gray-900">Daily Report Form</h2>
@@ -761,7 +761,7 @@ export default function DailyReport() {
               </div>
 
               {/* Footer - Fixed */}
-              <div className="p-4 md:p-5 border-t border-gray-200 bg-gray-50/80 backdrop-blur-sm flex-shrink-0">
+              <div className="p-4 md:p-5 pb-safe-area border-t border-gray-200 bg-gray-50/80 backdrop-blur-sm flex-shrink-0">
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     type="button"
@@ -785,8 +785,8 @@ export default function DailyReport() {
       )}
       {/* View Details Modal */}
       {showViewModal && selectedReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center z-50 sm:p-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-md h-full sm:h-auto sm:max-h-[85vh] flex flex-col overflow-hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-end sm:justify-center z-50 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-md h-auto max-h-[92dvh] sm:h-auto sm:max-h-[85vh] flex flex-col overflow-hidden">
             {/* Header */}
             <div className="p-5 border-b border-gray-200 flex justify-between items-center bg-indigo-900 text-white flex-shrink-0">
               <div>
@@ -872,7 +872,7 @@ export default function DailyReport() {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-100 bg-gray-50 flex-shrink-0">
+            <div className="p-4 pb-safe-area border-t border-gray-100 bg-gray-50 flex-shrink-0">
               <button
                 onClick={() => setShowViewModal(false)}
                 className="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition shadow-lg"

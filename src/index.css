@@ -104,7 +104,7 @@ table th, table td {
 
 /* Safe-area bottom padding utility (for footer / fixed bars on notch devices) */
 .pb-safe-area {
-  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.625rem);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.625rem) !important;
 }
 
 /* Prevent iOS Safari from zooming in when focusing small inputs.

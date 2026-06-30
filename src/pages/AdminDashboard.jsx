@@ -278,7 +278,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Mobile View: Activity Cards */}
-        <div className="md:hidden flex flex-col gap-4 p-3 bg-gray-50/50 overflow-y-auto" style={{ maxHeight: '65vh', minHeight: '200px' }}>
+        <div className="md:hidden flex flex-col gap-4 p-3 bg-gray-50/50">
           {paginatedItems.map((rpt, idx) => (
             <div key={idx} className="flex-shrink-0 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               {/* Status stripe */}
