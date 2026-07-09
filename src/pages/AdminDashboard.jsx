@@ -15,9 +15,12 @@ import {
   XCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '../store/authStore';
 import { formatDate } from '../utils/helpers';
 
 export default function AdminDashboard() {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'MASTER ADMIN';
   const [reports, setReports] = useState([]);
   const [fetching, setFetching] = useState(true);
   const [filters, setFilters] = useState({
@@ -50,6 +53,7 @@ export default function AdminDashboard() {
             rowIndex: index + 7,
             timestamp: row[0],
             sn: row[1],
+            empId: row[2],
             name: row[3],
             date: row[4],
             opStatus: row[5],
@@ -62,7 +66,12 @@ export default function AdminDashboard() {
             status: row[13] || 'Pending'
           }))
           .filter(rpt => rpt.sn && rpt.sn !== '');
-        setReports(formattedReports);
+
+        // Non-admin users (granted Dashboard access) only see their own reports
+        const scopedReports = isAdmin
+          ? formattedReports
+          : formattedReports.filter(rpt => String(rpt.empId) === String(user?.empId));
+        setReports(scopedReports);
       }
     } catch (err) {
       console.error('Fetch dashboard error:', err);

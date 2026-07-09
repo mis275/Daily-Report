@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import {
   Plus,
   Edit2,
+  Trash2,
   Eye,
   EyeOff,
   X,
@@ -68,7 +69,10 @@ export default function Settings() {
             userId: row[4],
             pass: row[5],
             role: row[6],
-            access: row[7] ? String(row[7]).split(',').map(p => p.trim()) : [],
+            // Page Access must only ever hold page names — drop stray status values from legacy/corrupted rows
+            access: row[7]
+              ? String(row[7]).split(',').map(p => p.trim()).filter(p => p && !['Active', 'Inactive'].includes(p))
+              : [],
             status: row[8]
           }))
           .filter(u => u.sn && u.sn !== '');
@@ -80,7 +84,7 @@ export default function Settings() {
 
         const uniqueOpts = [...new Set(opts)];
         // Fallback if L is empty
-        setPageOptions(uniqueOpts.length > 0 ? uniqueOpts : ['Dashboard', 'Daily Report', 'Admin Approval']);
+        setPageOptions(uniqueOpts.length > 0 ? uniqueOpts : ['Dashboard', 'Daily Report', 'Admin Approval', 'Settings']);
         setUsers(formattedUsers);
       }
     } catch (err) {
@@ -158,6 +162,37 @@ export default function Settings() {
     setFormData({ ...formData, access: newAccess });
   };
 
+  const handleDelete = async (targetUser) => {
+    if (!window.confirm(`Delete user "${targetUser.name}"? This cannot be undone.`)) return;
+
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        action: 'delete',
+        sheetName: MASTER_SHEET,
+        rowIndex: String(targetUser.rowIndex)
+      });
+      const resp = await fetch(API_URL, {
+        method: 'POST',
+        body: params.toString(),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      const result = await resp.json();
+
+      if (result.success) {
+        toast.success('User deleted!');
+        fetchData();
+      } else {
+        throw new Error(result.error || 'Delete failed');
+      }
+    } catch (err) {
+      console.error('Delete user error:', err);
+      toast.error('Failed to delete: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -180,23 +215,39 @@ export default function Settings() {
 
       let result;
       if (editingRowIndex) {
-        // Update surgical (all cells in row A-I)
-        const cellPromises = rowData.map((val, idx) => {
+        // Update surgical (all cells in row A-I except Serial No). columnIndex is 1-based (A=1 ... I=9),
+        // matching the convention used for updateCell elsewhere (e.g. AdminApproval's K/M/N updates).
+        // Serial No (column B) is only ever set once by generateSN() at creation — edits must never touch it.
+        const editableFields = rowData
+          .map((val, idx) => ({ val, columnIndex: idx + 1 }))
+          .filter(f => f.columnIndex !== 2);
+
+        const cellResults = await Promise.all(editableFields.map(({ val, columnIndex }) => {
           const params = new URLSearchParams({
             action: 'updateCell',
             sheetName: MASTER_SHEET,
             rowIndex: String(editingRowIndex),
-            columnIndex: String(idx), // 0 to 8
+            columnIndex: String(columnIndex),
             value: String(val)
           });
-          return fetch(`${API_URL}?${params.toString()}`, { method: 'POST' }).then(r => r.json());
-        });
-        await Promise.all(cellPromises);
-        result = { success: true };
+          return fetch(API_URL, {
+            method: 'POST',
+            body: params.toString(),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+          }).then(r => r.json());
+        }));
+        result = { success: cellResults.every(r => r.success) };
       } else {
         // Insert new
-        const resp = await fetch(`${API_URL}?action=insert&sheetName=${MASTER_SHEET}&rowData=${JSON.stringify(rowData)}`, {
-          method: 'POST'
+        const insertParams = new URLSearchParams();
+        insertParams.append('action', 'insert');
+        insertParams.append('sheetName', MASTER_SHEET);
+        insertParams.append('rowData', JSON.stringify(rowData));
+
+        const resp = await fetch(API_URL, {
+          method: 'POST',
+          body: insertParams.toString(),
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
         result = await resp.json();
       }
@@ -241,7 +292,8 @@ export default function Settings() {
           </button>
           <button
             onClick={handleOpenAdd}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-lg flex items-center gap-2 transition-all hover:scale-105"
+            disabled={fetching}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-lg flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <Plus size={18} />
             Add User
@@ -272,12 +324,20 @@ export default function Settings() {
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{user.empId}</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => handleOpenEdit(user)}
-                      className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
-                    >
-                      <Edit2 size={18} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleOpenEdit(user)}
+                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -384,12 +444,20 @@ export default function Settings() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <button
-                      onClick={() => handleOpenEdit(user)}
-                      className="text-indigo-600 hover:text-indigo-800 transition-transform hover:scale-110 flex items-center justify-center w-full"
-                    >
-                      <Edit2 size={18} />
-                    </button>
+                    <div className="flex items-center justify-center gap-3">
+                      <button
+                        onClick={() => handleOpenEdit(user)}
+                        className="text-indigo-600 hover:text-indigo-800 transition-transform hover:scale-110 flex items-center justify-center"
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(user)}
+                        className="text-red-500 hover:text-red-700 transition-transform hover:scale-110 flex items-center justify-center"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -570,7 +638,7 @@ export default function Settings() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-gray-50 transition-all font-bold"
+                  className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-gray-50 transition-all"
                 >
                   Discard
                 </button>

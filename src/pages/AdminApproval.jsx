@@ -32,6 +32,7 @@ const getDirectDriveLink = (url) => {
 
 export default function AdminApproval() {
   const { user } = useAuthStore();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'MASTER ADMIN';
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -92,7 +93,12 @@ export default function AdminApproval() {
             imageLinks: row[14] ? JSON.parse(row[14]) : [] // O
           }))
           .filter(rpt => rpt.sn && rpt.sn !== ''); // Filter after mapping to preserve rowIndex
-        setReports(formattedReports);
+
+        // Non-admin users (granted Admin Approval access) only see their own reports
+        const scopedReports = isAdmin
+          ? formattedReports
+          : formattedReports.filter(rpt => String(rpt.empId) === String(user?.empId));
+        setReports(scopedReports);
       }
     } catch (err) {
       console.error('Fetch reports error:', err);

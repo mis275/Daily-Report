@@ -12,13 +12,30 @@ import { initializeStorage } from './utils/storageManager';
 
 import { useAuthStore } from './store/authStore';
 
-// Employees only ever see their own data (enforced in DailyReport itself);
-// Dashboard/Admin Approval/Settings expose every employee's records and credentials,
-// so only ADMIN / MASTER ADMIN may land there.
+// Page -> route lookup, matches the accessKey strings stored in the Master sheet's Access column.
+const ACCESS_ROUTES = [
+  { accessKey: 'Daily Report', path: '/daily-report' },
+  { accessKey: 'Dashboard', path: '/dashboard' },
+  { accessKey: 'Admin Approval', path: '/admin-approval' },
+];
+
+const NoAccess = () => (
+  <div className="flex flex-col items-center justify-center py-24 text-center gap-2">
+    <p className="text-lg font-bold text-gray-700">No pages assigned to your account</p>
+    <p className="text-sm text-gray-500">Contact your administrator to get page access.</p>
+  </div>
+);
+
+// Land each user on the first page they actually have access to, instead of a fixed page.
+// ADMIN / MASTER ADMIN always land on the Dashboard since they can see everything.
 const HomeRedirect = () => {
   const { user } = useAuthStore();
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'MASTER ADMIN';
-  return isAdmin ? <AdminDashboard /> : <Navigate to="/daily-report" replace />;
+  if (isAdmin) return <Navigate to="/dashboard" replace />;
+
+  const userAccess = user?.access || [];
+  const firstAccessible = ACCESS_ROUTES.find(r => userAccess.includes(r.accessKey));
+  return firstAccessible ? <Navigate to={firstAccessible.path} replace /> : <NoAccess />;
 };
 
 function App() {
@@ -42,9 +59,10 @@ function App() {
             </ProtectedRoute>
           }>
             <Route index element={<HomeRedirect />} />
-            <Route path="dashboard" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-            <Route path="daily-report" element={<DailyReport />} />
-            <Route path="admin-approval" element={<ProtectedRoute adminOnly><AdminApproval /></ProtectedRoute>} />
+            <Route path="dashboard" element={<ProtectedRoute accessKey="Dashboard"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="daily-report" element={<ProtectedRoute accessKey="Daily Report"><DailyReport /></ProtectedRoute>} />
+            <Route path="admin-approval" element={<ProtectedRoute accessKey="Admin Approval"><AdminApproval /></ProtectedRoute>} />
+            {/* Settings manages every user's credentials/roles — always admin-only, regardless of the Access column */}
             <Route path="settings" element={<ProtectedRoute adminOnly><Settings /></ProtectedRoute>} />
           </Route>
 

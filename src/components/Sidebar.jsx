@@ -25,7 +25,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   };
 
   const allMenuItems = [
-    { path: '/', icon: LayoutDashboard, label: 'Dashboard', accessKey: 'Dashboard' },
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', accessKey: 'Dashboard' },
     { path: '/daily-report', icon: Plus, label: 'Daily Report', accessKey: 'Daily Report' },
     { path: '/admin-approval', icon: CheckCircle, label: 'Admin Approval', accessKey: 'Admin Approval' },
     { path: '/settings', icon: Settings, label: 'Settings', accessKey: 'Settings' },
