@@ -265,7 +265,7 @@ export default function DailyReport() {
 
   const filteredReports = reports.filter(rpt => {
     // Security: Only show data matching the logged-in user's Employee ID
-    if (user?.empId && rpt.empId !== user.empId) return false;
+    if (user?.empId && String(rpt.empId) !== String(user.empId)) return false;
 
     if (filters.fromDate && rpt.date < filters.fromDate) return false;
     if (filters.toDate && rpt.date > filters.toDate) return false;
@@ -541,7 +541,7 @@ export default function DailyReport() {
             <span>entries</span>
             <span className="text-gray-300 mx-1">|</span>
             <span className="text-sm text-gray-500">
-              {reports.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0}-{Math.min(currentPage * itemsPerPage, reports.length)} of {reports.length}
+              {sortedReports.length > 0 ? ((currentPage - 1) * itemsPerPage) + 1 : 0}-{Math.min(currentPage * itemsPerPage, sortedReports.length)} of {sortedReports.length}
             </span>
           </div>
 

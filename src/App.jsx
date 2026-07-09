@@ -12,6 +12,15 @@ import { initializeStorage } from './utils/storageManager';
 
 import { useAuthStore } from './store/authStore';
 
+// Employees only ever see their own data (enforced in DailyReport itself);
+// Dashboard/Admin Approval/Settings expose every employee's records and credentials,
+// so only ADMIN / MASTER ADMIN may land there.
+const HomeRedirect = () => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'MASTER ADMIN';
+  return isAdmin ? <AdminDashboard /> : <Navigate to="/daily-report" replace />;
+};
+
 function App() {
   const initializeAuth = useAuthStore(state => state.initializeAuth);
 
@@ -26,17 +35,17 @@ function App() {
         <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
         <Routes>
           <Route path="/login" element={<Login />} />
-          
+
           <Route path="/" element={
             <ProtectedRoute>
               <Layout />
             </ProtectedRoute>
           }>
-            <Route index element={<AdminDashboard />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route index element={<HomeRedirect />} />
+            <Route path="dashboard" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
             <Route path="daily-report" element={<DailyReport />} />
-            <Route path="admin-approval" element={<AdminApproval />} />
-            <Route path="settings" element={<Settings />} />
+            <Route path="admin-approval" element={<ProtectedRoute adminOnly><AdminApproval /></ProtectedRoute>} />
+            <Route path="settings" element={<ProtectedRoute adminOnly><Settings /></ProtectedRoute>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
