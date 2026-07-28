@@ -18,6 +18,7 @@ import {
   Activity
 } from 'lucide-react';
 import { safeFetchJson } from '../utils/api';
+import BottomSheet from '../components/BottomSheet';
 
 export default function Settings() {
   const [users, setUsers] = useState([]);
@@ -499,167 +500,161 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
-            <form onSubmit={handleSubmit} className="flex flex-col h-full">
-              {/* Modal Header */}
-              <div className="px-6 py-5 bg-indigo-900 flex justify-between items-center text-white">
-                <div>
-                  <h2 className="text-xl font-black uppercase tracking-tight">{editingRowIndex ? 'Edit User Configuration' : 'Onboard New User'}</h2>
-                  <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mt-0.5">Define employee credentials & access level</p>
-                </div>
-                <button type="button" onClick={() => setShowModal(false)} className="text-indigo-300 hover:text-white transition-colors">
-                  <X size={24} />
-                </button>
-              </div>
+      {/* ── Add/Edit User — iOS Bottom Sheet ──────────────────── */}
+      <BottomSheet
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title={editingRowIndex ? 'Edit User' : 'Onboard New User'}
+        subtitle="Define employee credentials & access level"
+        headerColor="indigo"
+        footer={
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowModal(false)}
+              className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 font-bold text-sm rounded-xl hover:bg-gray-50 transition-all"
+            >
+              Discard
+            </button>
+            <button
+              type="submit"
+              form="settings-user-form"
+              disabled={loading}
+              className="flex-1 py-3 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 active:scale-95 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+            >
+              {loading ? 'Processing...' : (editingRowIndex ? 'Update' : 'Create Account')}
+            </button>
+          </div>
+        }
+      >
+        <form id="settings-user-form" onSubmit={handleSubmit} className="p-4 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            {/* Emp ID */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Employee ID *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. 1024"
+                value={formData.empId}
+                onChange={(e) => setFormData({ ...formData, empId: e.target.value })}
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+              />
+            </div>
+            {/* Status */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold bg-white"
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
 
-              {/* Modal Body */}
-              <div className="p-6 space-y-5 overflow-y-auto max-h-[70vh]">
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Emp ID */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Employee ID *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. 1024"
-                      value={formData.empId}
-                      onChange={(e) => setFormData({ ...formData, empId: e.target.value })}
-                      className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
-                    />
-                  </div>
-                  {/* Status */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Account Status</label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold bg-white"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                  </div>
-                </div>
+          {/* Name */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Full Name *</label>
+            <input
+              type="text"
+              required
+              placeholder="Enter employee's full legal name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+            />
+          </div>
 
-                {/* Name */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Full Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Enter employee's full legal name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {/* User ID */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">User ID *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. john_doe"
-                      value={formData.userId}
-                      onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
-                      className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono"
-                    />
-                  </div>
-                  {/* Password */}
-                  <div className="space-y-1.5 relative">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Password *</label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        required
-                        placeholder="••••••••"
-                        value={formData.pass}
-                        onChange={(e) => setFormData({ ...formData, pass: e.target.value })}
-                        className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors"
-                      >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Role */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">System Role</label>
-                  <div className="flex gap-2">
-                    {['User', 'Admin'].map(r => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, role: r })}
-                        className={`flex-1 py-3 rounded-xl border text-xs font-black uppercase tracking-widest transition-all ${formData.role === r
-                            ? 'bg-indigo-900 border-indigo-900 text-white shadow-md scale-[1.02]'
-                            : 'bg-white border-gray-200 text-gray-400 hover:border-indigo-300'
-                          }`}
-                      >
-                        {r}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Page Access */}
-                <div className="space-y-3 pt-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Authorized Page Access</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {pageOptions.map((page, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => toggleAccess(page)}
-                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${formData.access.includes(page)
-                            ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-300'
-                            : 'bg-gray-50 border-gray-100 hover:border-indigo-200 opacity-60'
-                          }`}
-                      >
-                        <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${formData.access.includes(page) ? 'bg-indigo-600 text-white' : 'bg-white border-2 border-gray-200'
-                          }`}>
-                          {formData.access.includes(page) && <Save size={12} strokeWidth={4} />}
-                        </div>
-                        <span className={`text-[11px] font-bold uppercase tracking-tight ${formData.access.includes(page) ? 'text-indigo-900' : 'text-gray-500'}`}>
-                          {page}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="p-6 bg-gray-50 border-t border-gray-100 flex gap-3">
+          <div className="grid grid-cols-2 gap-3">
+            {/* User ID */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">User ID *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. john_doe"
+                value={formData.userId}
+                onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono"
+              />
+            </div>
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Password *</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="••••••••"
+                  value={formData.pass}
+                  onChange={(e) => setFormData({ ...formData, pass: e.target.value })}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono pr-10"
+                />
                 <button
                   type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 py-3 bg-white border border-gray-300 text-gray-700 font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-gray-50 transition-all"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-600 transition-colors"
                 >
-                  Discard
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 py-3 bg-indigo-600 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
-                >
-                  {loading ? 'Processing...' : (editingRowIndex ? 'Update Credentials' : 'Create Account')}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
-      )}
+
+          {/* Role */}
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">System Role</label>
+            <div className="flex gap-2">
+              {['User', 'Admin'].map(r => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, role: r })}
+                  className={`flex-1 py-3 rounded-xl border text-xs font-black uppercase tracking-widest transition-all active:scale-95 ${
+                    formData.role === r
+                      ? 'bg-indigo-900 border-indigo-900 text-white shadow-md'
+                      : 'bg-white border-gray-200 text-gray-400'
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Page Access */}
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Page Access</label>
+            <div className="grid grid-cols-2 gap-2">
+              {pageOptions.map((page, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => toggleAccess(page)}
+                  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all active:scale-95 ${
+                    formData.access.includes(page)
+                      ? 'bg-indigo-50 border-indigo-300 ring-1 ring-indigo-300'
+                      : 'bg-gray-50 border-gray-100'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
+                    formData.access.includes(page) ? 'bg-indigo-600 text-white' : 'bg-white border-2 border-gray-200'
+                  }`}>
+                    {formData.access.includes(page) && <Save size={12} strokeWidth={4} />}
+                  </div>
+                  <span className={`text-[11px] font-bold uppercase tracking-tight ${
+                    formData.access.includes(page) ? 'text-indigo-900' : 'text-gray-500'
+                  }`}>
+                    {page}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </form>
+      </BottomSheet>
     </div>
   );
 }

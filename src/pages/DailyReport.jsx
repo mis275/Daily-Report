@@ -4,6 +4,7 @@ import { Plus, Search, ChevronLeft, ChevronRight, X, Calendar, Clock, MapPin, Us
 import { useAuthStore } from '../store/authStore';
 import { formatDate } from '../utils/helpers';
 import { safeFetchJson } from '../utils/api';
+import BottomSheet from '../components/BottomSheet';
 
 const getDirectDriveLink = (url) => {
   if (!url) return '';
@@ -574,339 +575,301 @@ export default function DailyReport() {
         </div>
       </div>
 
-      {/* Form Modal */}
-      {showFormModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-end sm:justify-center z-50 sm:p-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-md h-auto max-h-[92dvh] sm:h-auto sm:max-h-[90vh] flex flex-col overflow-hidden">
-            <form onSubmit={handleSubmit} className="flex flex-col min-h-0 overflow-hidden">
-              {/* Header - Fixed */}
-              <div className="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50 flex-shrink-0">
-                <h2 className="text-xl font-bold text-gray-900">Daily Report Form</h2>
-                <button type="button" onClick={() => setShowFormModal(false)} className="text-gray-400 hover:text-red-500 transition-colors">
-                  <X size={24} />
-                </button>
-              </div>
+      {/* ── Add/Edit Report — iOS Bottom Sheet ──────────────────── */}
+      <BottomSheet
+        isOpen={showFormModal}
+        onClose={() => setShowFormModal(false)}
+        title="Daily Report Form"
+        subtitle="Fill in your work details below"
+        footer={
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setShowFormModal(false)}
+              className="flex-1 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition font-bold text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="daily-report-form"
+              disabled={loading}
+              className="flex-1 bg-indigo-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-indigo-700 active:scale-95 transition disabled:opacity-50 text-sm shadow-lg shadow-indigo-200"
+            >
+              {loading ? 'Saving…' : 'Save Report'}
+            </button>
+          </div>
+        }
+      >
+        <form id="daily-report-form" onSubmit={handleSubmit} className="p-4 space-y-4">
+          {/* Person Name */}
+          <div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Person Name *</label>
+            {(user?.role === 'ADMIN' || user?.role === 'MASTER ADMIN') ? (
+              <select
+                value={formData.personName}
+                onChange={(e) => handleUserChange(e.target.value)}
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white text-sm font-medium"
+                required
+              >
+                <option value="">Select Employee</option>
+                {usersList.map((u, i) => <option key={i} value={u.name}>{u.name}</option>)}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={formData.personName}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 bg-gray-50 cursor-not-allowed text-sm font-medium text-gray-500"
+                disabled
+              />
+            )}
+          </div>
 
-              {/* Body - Scrollable */}
-              <div className="p-4 md:p-5 overflow-y-auto flex-1 space-y-4">
-                <div className="grid grid-cols-1 gap-4">
-                  {/* Person Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Person Name *</label>
-                    {(user?.role === 'ADMIN' || user?.role === 'MASTER ADMIN') ? (
-                      <select
-                        value={formData.personName}
-                        onChange={(e) => handleUserChange(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                        required
+          {/* Work Date */}
+          <div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Work Date *</label>
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm"
+              required
+            />
+          </div>
+
+          {/* Operational Status */}
+          <div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Operational Status *</label>
+            <div className="grid grid-cols-3 gap-2">
+              {['Full Day', 'Half Day', 'Absent'].map(st => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, status: st })}
+                  className={`py-3 text-xs font-bold rounded-xl border transition-all active:scale-95 ${formData.status === st
+                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
+                    : 'bg-white border-gray-200 text-gray-500'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Location */}
+          <div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Work Location *</label>
+            <input
+              type="text"
+              placeholder="e.g. Office, Field, Customer Site"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm"
+              required
+            />
+          </div>
+
+          {/* Working Details */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-black text-indigo-900 uppercase tracking-widest">Working Details *</label>
+              <span className="text-[10px] font-bold text-gray-400">
+                {Array.isArray(formData.details) ? formData.details.length : 0}/10 ITEMS
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {formData.details.map((detail, index) => (
+                <div key={index} className="p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
+                        {index + 1}
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Detail Item</span>
+                    </div>
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newDetails = formData.details.filter((_, i) => i !== index);
+                          setFormData({ ...formData, details: newDetails });
+                        }}
+                        className="text-red-500 hover:text-red-700 p-1 transition"
                       >
-                        <option value="">Select Employee</option>
-                        {usersList.map((u, i) => <option key={i} value={u.name}>{u.name}</option>)}
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        value={formData.personName}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 cursor-not-allowed"
-                        disabled
-                      />
+                        <X size={16} />
+                      </button>
                     )}
                   </div>
 
-                  {/* Work Date */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Work Date *</label>
-                    <input
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                      required
-                    />
-                  </div>
+                  <textarea
+                    rows="2"
+                    placeholder={index === 0 ? "Describe your main activity..." : "Add another task detail..."}
+                    value={detail.text}
+                    onChange={(e) => {
+                      const newDetails = [...formData.details];
+                      newDetails[index].text = e.target.value;
+                      setFormData({ ...formData, details: newDetails });
+                    }}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-white"
+                    required={index === 0}
+                  />
 
-                  {/* Operational Status */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Operational Status *</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {['Full Day', 'Half Day', 'Absent'].map(st => (
+                  {/* Image Upload */}
+                  <div className="flex flex-wrap gap-2">
+                    {detail.images.map((img, imgIdx) => (
+                      <div key={imgIdx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300 shadow-sm">
+                        <img src={`data:image/png;base64,${img.base64}`} alt="preview" className="w-full h-full object-cover" />
                         <button
-                          key={st}
                           type="button"
-                          onClick={() => setFormData({ ...formData, status: st })}
-                          className={`py-3 sm:py-2 text-xs font-bold rounded-lg border transition-all ${formData.status === st
-                            ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'bg-white border-gray-200 text-gray-500 hover:border-indigo-300'
-                            }`}
+                          onClick={() => removeImage(index, imgIdx)}
+                          className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg p-0.5"
                         >
-                          {st}
+                          <X size={10} />
                         </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Work Location *</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Office, Field, Customer Site"
-                      value={formData.location}
-                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Working Details Section */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="block text-sm font-bold text-indigo-900 uppercase tracking-wide">Working Details *</label>
-                    <span className="text-[10px] font-bold text-gray-400">
-                      {Array.isArray(formData.details) ? formData.details.length : 0}/10 ITEMS
-                    </span>
-                  </div>
-
-                  <div className="space-y-4">
-                    {formData.details.map((detail, index) => (
-                      <div key={index} className="p-4 bg-gray-50 rounded-xl border border-gray-200 space-y-3">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
-                              {index + 1}
-                            </div>
-                            <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Detail Item</span>
-                          </div>
-                          {index > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newDetails = formData.details.filter((_, i) => i !== index);
-                                setFormData({ ...formData, details: newDetails });
-                              }}
-                              className="text-red-500 hover:text-red-700 p-1 transition"
-                            >
-                              <X size={16} />
-                            </button>
-                          )}
-                        </div>
-
-                        <textarea
-                          rows="2"
-                          placeholder={index === 0 ? "Describe your main activity..." : "Add another task detail..."}
-                          value={detail.text}
-                          onChange={(e) => {
-                            const newDetails = [...formData.details];
-                            newDetails[index].text = e.target.value;
-                            setFormData({ ...formData, details: newDetails });
-                          }}
-                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm bg-white"
-                          required={index === 0}
-                        />
-
-                        {/* Image Upload for this detail */}
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap gap-2">
-                            {detail.images.map((img, imgIdx) => (
-                              <div key={imgIdx} className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-300 shadow-sm">
-                                <img
-                                  src={`data:image/png;base64,${img.base64}`}
-                                  alt="preview"
-                                  className="w-full h-full object-cover"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => removeImage(index, imgIdx)}
-                                  className="absolute top-0 right-0 bg-red-500 text-white rounded-bl-lg p-0.5"
-                                >
-                                  <X size={10} />
-                                </button>
-                              </div>
-                            ))}
-                            {detail.images.length < 3 && (
-                              <label className="w-16 h-16 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 transition bg-white">
-                                <Plus size={16} className="text-gray-400" />
-                                <input
-                                  type="file"
-                                  className="hidden"
-                                  accept="image/*"
-                                  multiple
-                                  onChange={(e) => handleImageChange(e, index)}
-                                />
-                              </label>
-                            )}
-                          </div>
-                        </div>
                       </div>
                     ))}
-                  </div>
-
-                  {formData.details.length < 10 && (
-                    <button
-                      type="button"
-                      onClick={() => setFormData({ ...formData, details: [...formData.details, { text: '', images: [] }] })}
-                      className="w-full py-2 border-2 border-dashed border-indigo-200 rounded-lg text-indigo-600 font-bold text-sm hover:bg-indigo-50 hover:border-indigo-400 transition flex items-center justify-center gap-2"
-                    >
-                      <Plus size={16} />
-                      Add More Details
-                    </button>
-                  )}
-                </div>
-
-                {/* Remarks */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
-                  <input
-                    type="text"
-                    placeholder="Any additional notes..."
-                    value={formData.remarks}
-                    onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                  />
-                </div>
-              </div>
-
-              {/* Footer - Fixed */}
-              <div className="p-4 md:p-5 pb-safe-area border-t border-gray-200 bg-gray-50/80 backdrop-blur-sm flex-shrink-0">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowFormModal(false)}
-                    className="w-full sm:flex-1 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition font-bold"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full sm:flex-1 bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
-                  >
-                    {loading ? 'Saving...' : 'Save Report'}
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-      {/* View Details Modal */}
-      {showViewModal && selectedReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-end sm:justify-center z-50 sm:p-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-md h-auto max-h-[92dvh] sm:h-auto sm:max-h-[85vh] flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="p-5 border-b border-gray-200 flex justify-between items-center bg-indigo-900 text-white flex-shrink-0">
-              <div>
-                <h2 className="text-xl font-bold uppercase tracking-tight">{selectedReport.sn}</h2>
-                <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mt-0.5">Report Details</p>
-              </div>
-              <button type="button" onClick={() => setShowViewModal(false)} className="text-indigo-200 hover:text-white transition-colors">
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-6">
-              {/* Profile Bar */}
-              <div className="flex flex-col gap-1 pb-4 border-b border-gray-100">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee Name</p>
-                <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter leading-none">{selectedReport.name}</h3>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Work Date</p>
-                  <p className="font-bold text-gray-900 flex items-center gap-2">
-                    <Calendar size={16} className="text-indigo-500" />
-                    {selectedReport.date ? formatDate(selectedReport.date) : '-'}
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 size={16} className="text-green-500" />
-                    <span className="font-bold text-gray-900 uppercase">{selectedReport.status}</span>
+                    {detail.images.length < 3 && (
+                      <label className="w-16 h-16 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 transition bg-white">
+                        <Plus size={16} className="text-gray-400" />
+                        <input type="file" className="hidden" accept="image/*" multiple onChange={(e) => handleImageChange(e, index)} />
+                      </label>
+                    )}
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3 col-span-2">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Work Location</p>
-                  <p className="font-bold text-indigo-600 flex items-center gap-2">
-                    <MapPin size={16} className="text-indigo-500" />
-                    {selectedReport.location}
-                  </p>
-                </div>
-              </div>
-
-              {/* Work Details & Images */}
-              <div className="space-y-4">
-                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                  <FileText size={16} className="text-indigo-600" />
-                  Working Details & Images
-                </h4>
-                <div className="space-y-3">
-                  {selectedReport.details.split('\n').map((line, idx) => {
-                    const detailImages = selectedReport.imageLinks && selectedReport.imageLinks[idx] ? selectedReport.imageLinks[idx] : [];
-                    return (
-                      <div key={idx} className="bg-indigo-50/30 rounded-xl border border-indigo-100 p-4 space-y-3">
-                        <p className="text-sm text-gray-700 leading-relaxed font-medium">{line}</p>
-                        {detailImages.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {detailImages.map((link, imgIdx) => (
-                              <button 
-                                key={imgIdx} 
-                                onClick={() => setPreviewImage(link)}
-                                className="block w-20 h-20 rounded-lg overflow-hidden border border-indigo-200 hover:ring-2 hover:ring-indigo-400 transition shadow-sm"
-                              >
-                                <img src={getDirectDriveLink(link)} alt="Work" className="w-full h-full object-cover" />
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Remarks */}
-              {selectedReport.remarks && (
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Additional Remarks</p>
-                  <p className="text-sm text-gray-600 italic border-l-2 border-gray-200 pl-3">{selectedReport.remarks}</p>
-                </div>
-              )}
+              ))}
             </div>
 
-            {/* Footer */}
-            <div className="p-4 pb-safe-area border-t border-gray-100 bg-gray-50 flex-shrink-0">
+            {formData.details.length < 10 && (
               <button
-                onClick={() => setShowViewModal(false)}
-                className="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition shadow-lg"
+                type="button"
+                onClick={() => setFormData({ ...formData, details: [...formData.details, { text: '', images: [] }] })}
+                className="w-full py-2.5 border-2 border-dashed border-indigo-200 rounded-xl text-indigo-600 font-bold text-sm hover:bg-indigo-50 hover:border-indigo-400 transition flex items-center justify-center gap-2"
               >
-                Close View
+                <Plus size={16} />
+                Add More Details
               </button>
-            </div>
+            )}
           </div>
-        </div>
-      )}
 
-      {/* Full Image Preview Modal */}
+          {/* Remarks */}
+          <div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Remarks</label>
+            <input
+              type="text"
+              placeholder="Any additional notes..."
+              value={formData.remarks}
+              onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm"
+            />
+          </div>
+        </form>
+      </BottomSheet>
+
+      {/* ── View Report Details — iOS Bottom Sheet ───────────────── */}
+      <BottomSheet
+        isOpen={showViewModal && !!selectedReport}
+        onClose={() => setShowViewModal(false)}
+        title={selectedReport?.sn ?? ''}
+        subtitle="Report Details"
+        headerColor="indigo"
+        footer={
+          <button
+            onClick={() => setShowViewModal(false)}
+            className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 active:scale-95 transition shadow-lg shadow-indigo-200 text-sm"
+          >
+            Close
+          </button>
+        }
+      >
+        {selectedReport && (
+          <div className="p-5 space-y-5">
+            <div className="flex flex-col gap-1 pb-4 border-b border-gray-100">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee Name</p>
+              <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter leading-none">{selectedReport.name}</h3>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Work Date</p>
+                <p className="font-bold text-gray-900 flex items-center gap-2 text-sm">
+                  <Calendar size={14} className="text-indigo-500" />
+                  {selectedReport.date ? formatDate(selectedReport.date) : '-'}
+                </p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={14} className="text-green-500" />
+                  <span className="font-bold text-gray-900 uppercase text-sm">{selectedReport.status}</span>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 col-span-2">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Work Location</p>
+                <p className="font-bold text-indigo-600 flex items-center gap-2 text-sm">
+                  <MapPin size={14} className="text-indigo-500" />
+                  {selectedReport.location}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                <FileText size={14} className="text-indigo-600" />
+                Working Details &amp; Images
+              </h4>
+              <div className="space-y-3">
+                {selectedReport.details.split('\n').map((line, idx) => {
+                  const detailImages = selectedReport.imageLinks && selectedReport.imageLinks[idx] ? selectedReport.imageLinks[idx] : [];
+                  return (
+                    <div key={idx} className="bg-indigo-50/40 rounded-xl border border-indigo-100 p-3 space-y-2">
+                      <p className="text-sm text-gray-700 leading-relaxed font-medium">{line}</p>
+                      {detailImages.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {detailImages.map((link, imgIdx) => (
+                            <button
+                              key={imgIdx}
+                              onClick={() => setPreviewImage(link)}
+                              className="block w-20 h-20 rounded-xl overflow-hidden border border-indigo-200 hover:ring-2 hover:ring-indigo-400 transition shadow-sm active:scale-95"
+                            >
+                              <img src={getDirectDriveLink(link)} alt="Work" className="w-full h-full object-cover" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {selectedReport.remarks && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Additional Remarks</p>
+                <p className="text-sm text-gray-600 italic border-l-2 border-indigo-200 pl-3">{selectedReport.remarks}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </BottomSheet>
+
+      {/* Full Image Preview */}
       {previewImage && (
-        <div 
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200"
+        <div
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-[100] p-4"
           onClick={() => setPreviewImage(null)}
         >
-          <button 
+          <button
             className="absolute top-4 right-4 text-white/70 hover:text-white transition p-2"
             onClick={() => setPreviewImage(null)}
           >
             <X size={32} />
           </button>
-          <img 
-            src={getDirectDriveLink(previewImage)} 
-            alt="Preview" 
-            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
+          <img
+            src={getDirectDriveLink(previewImage)}
+            alt="Preview"
+            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
@@ -914,3 +877,4 @@ export default function DailyReport() {
     </div>
   );
 }
+
