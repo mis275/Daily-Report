@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/authStore';
+import { safeFetchJson } from '../utils/api';
 
 import botivateLogoB from '../Assets/logo.png';
 
@@ -27,8 +28,7 @@ const Login = () => {
       }
 
       const masterSheet = import.meta.env.VITE_MASTER_SHEET_NAME || 'Master';
-      const response = await fetch(`${apiUrl}?sheet=${masterSheet}`);
-      const result = await response.json();
+      const result = await safeFetchJson(`${apiUrl}?sheet=${masterSheet}`);
 
       if (!result.success) {
         toast.error('Failed to fetch user data');

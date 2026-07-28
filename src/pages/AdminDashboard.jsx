@@ -17,6 +17,7 @@ import {
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../store/authStore';
 import { formatDate } from '../utils/helpers';
+import { safeFetchJson } from '../utils/api';
 
 export default function AdminDashboard() {
   const { user } = useAuthStore();
@@ -43,8 +44,12 @@ export default function AdminDashboard() {
   const fetchReports = async () => {
     try {
       setFetching(true);
-      const resp = await fetch(`${API_URL}?sheet=${REPORT_SHEET}`);
-      const result = await resp.json();
+      if (!API_URL) {
+        toast.error('API URL not configured');
+        setReports([]);
+        return;
+      }
+      const result = await safeFetchJson(`${API_URL}?sheet=${REPORT_SHEET}`);
       if (result.success && result.data) {
         // Data starts at Row 7 (index 6)
         const reportData = result.data.slice(6); 
@@ -72,10 +77,12 @@ export default function AdminDashboard() {
           ? formattedReports
           : formattedReports.filter(rpt => String(rpt.empId) === String(user?.empId));
         setReports(scopedReports);
+      } else {
+        toast.error(result.message || 'Failed to sync dashboard data');
       }
     } catch (err) {
       console.error('Fetch dashboard error:', err);
-      toast.error('Failed to sync dashboard data');
+      toast.error(err.message || 'Failed to sync dashboard data');
     } finally {
       setFetching(false);
     }

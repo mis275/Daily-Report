@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Activity
 } from 'lucide-react';
+import { safeFetchJson } from '../utils/api';
 
 export default function Settings() {
   const [users, setUsers] = useState([]);
@@ -52,8 +53,12 @@ export default function Settings() {
   const fetchData = async () => {
     try {
       setFetching(true);
-      const resp = await fetch(`${API_URL}?sheet=${MASTER_SHEET}`);
-      const result = await resp.json();
+      if (!API_URL) {
+        toast.error('API URL not configured');
+        setUsers([]);
+        return;
+      }
+      const result = await safeFetchJson(`${API_URL}?sheet=${MASTER_SHEET}`);
       if (result.success && result.data) {
         // Users start at Row 2 (index 1)
         const userData = result.data.slice(1);
@@ -86,10 +91,12 @@ export default function Settings() {
         // Fallback if L is empty
         setPageOptions(uniqueOpts.length > 0 ? uniqueOpts : ['Dashboard', 'Daily Report', 'Admin Approval', 'Settings']);
         setUsers(formattedUsers);
+      } else {
+        toast.error(result.message || 'Failed to sync user data');
       }
     } catch (err) {
       console.error('Fetch settings error:', err);
-      toast.error('Failed to sync user data');
+      toast.error(err.message || 'Failed to sync user data');
     } finally {
       setFetching(false);
     }
@@ -230,11 +237,11 @@ export default function Settings() {
             columnIndex: String(columnIndex),
             value: String(val)
           });
-          return fetch(API_URL, {
+          return safeFetchJson(API_URL, {
             method: 'POST',
             body: params.toString(),
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-          }).then(r => r.json());
+          });
         }));
         result = { success: cellResults.every(r => r.success) };
       } else {
@@ -244,12 +251,11 @@ export default function Settings() {
         insertParams.append('sheetName', MASTER_SHEET);
         insertParams.append('rowData', JSON.stringify(rowData));
 
-        const resp = await fetch(API_URL, {
+        result = await safeFetchJson(API_URL, {
           method: 'POST',
           body: insertParams.toString(),
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
-        result = await resp.json();
       }
 
       if (result.success) {

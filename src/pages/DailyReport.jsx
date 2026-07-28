@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { Plus, Search, ChevronLeft, ChevronRight, X, Calendar, Clock, MapPin, User, FileText, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { formatDate } from '../utils/helpers';
+import { safeFetchJson } from '../utils/api';
 
 const getDirectDriveLink = (url) => {
   if (!url) return '';
@@ -64,8 +65,12 @@ export default function DailyReport() {
 
   const fetchReports = async () => {
     try {
-      const resp = await fetch(`${API_URL}?sheet=${REPORT_SHEET}`);
-      const result = await resp.json();
+      if (!API_URL) {
+        toast.error('API URL not configured');
+        setReports([]);
+        return;
+      }
+      const result = await safeFetchJson(`${API_URL}?sheet=${REPORT_SHEET}`);
       if (result.success && result.data) {
         // First 6 rows are headers/instructions as per "A7:A" mapping
         const reportData = result.data.slice(6); // Data starts at Row 7
@@ -84,10 +89,12 @@ export default function DailyReport() {
             imageLinks: row[14] ? JSON.parse(row[14]) : []
           }));
         setReports(formattedReports);
+      } else {
+        toast.error(result.message || 'Failed to load reports');
       }
     } catch (err) {
       console.error('Fetch reports error:', err);
-      toast.error('Failed to load reports');
+      toast.error(err.message || 'Failed to load reports');
     }
   };
 
@@ -95,8 +102,8 @@ export default function DailyReport() {
     if (user?.role !== 'ADMIN' && user?.role !== 'MASTER ADMIN') return;
     const MASTER_SHEET = import.meta.env.VITE_MASTER_SHEET_NAME || 'Master';
     try {
-      const resp = await fetch(`${API_URL}?sheet=${MASTER_SHEET}`);
-      const result = await resp.json();
+      if (!API_URL) return;
+      const result = await safeFetchJson(`${API_URL}?sheet=${MASTER_SHEET}`);
       if (result.success && result.data) {
         const users = result.data.slice(1).map(row => ({
           empId: row[2], // Column C
@@ -198,14 +205,13 @@ export default function DailyReport() {
           uploadParams.append('mimeType', img.type);
           uploadParams.append('folderId', FOLDER_ID);
 
-          const uploadResp = await fetch(API_URL, {
+          const uploadResult = await safeFetchJson(API_URL, {
             method: 'POST',
             body: uploadParams.toString(),
             headers: {
               'Content-Type': 'application/x-www-form-urlencoded',
             }
           });
-          const uploadResult = await uploadResp.json();
           if (!uploadResult.success) throw new Error(uploadResult.error || "Image upload failed");
           return uploadResult.fileUrl;
         }));
@@ -233,14 +239,13 @@ export default function DailyReport() {
       insertParams.append('sheetName', REPORT_SHEET);
       insertParams.append('rowData', JSON.stringify(rowData));
 
-      const resp = await fetch(API_URL, {
+      const result = await safeFetchJson(API_URL, {
         method: 'POST',
         body: insertParams.toString(),
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         }
       });
-      const result = await resp.json();
 
       if (result.success) {
         toast.success(`Report ${sn} saved successfully!`);
@@ -263,9 +268,11 @@ export default function DailyReport() {
     }
   };
 
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'MASTER ADMIN';
+
   const filteredReports = reports.filter(rpt => {
-    // Security: Only show data matching the logged-in user's Employee ID
-    if (user?.empId && String(rpt.empId) !== String(user.empId)) return false;
+    // Non-admin users only see their own reports. Admins see all reports.
+    if (!isAdmin && user?.empId && String(rpt.empId) !== String(user.empId)) return false;
 
     if (filters.fromDate && rpt.date < filters.fromDate) return false;
     if (filters.toDate && rpt.date > filters.toDate) return false;

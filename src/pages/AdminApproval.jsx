@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { formatDate } from '../utils/helpers';
+import { safeFetchJson } from '../utils/api';
 
 const getDirectDriveLink = (url) => {
   if (!url) return '';
@@ -68,8 +69,12 @@ export default function AdminApproval() {
   const fetchReports = async () => {
     try {
       setFetching(true);
-      const resp = await fetch(`${API_URL}?sheet=${REPORT_SHEET}`);
-      const result = await resp.json();
+      if (!API_URL) {
+        toast.error('API URL not configured');
+        setReports([]);
+        return;
+      }
+      const result = await safeFetchJson(`${API_URL}?sheet=${REPORT_SHEET}`);
       if (result.success && result.data) {
         // Data starts at Row 7 (index 6)
         const reportData = result.data.slice(6);
@@ -99,10 +104,12 @@ export default function AdminApproval() {
           ? formattedReports
           : formattedReports.filter(rpt => String(rpt.empId) === String(user?.empId));
         setReports(scopedReports);
+      } else {
+        toast.error(result.message || 'Failed to load reports');
       }
     } catch (err) {
       console.error('Fetch reports error:', err);
-      toast.error('Failed to load reports');
+      toast.error(err.message || 'Failed to load reports');
     } finally {
       setFetching(false);
     }
