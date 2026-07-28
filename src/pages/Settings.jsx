@@ -283,12 +283,12 @@ export default function Settings() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="hidden sm:block">
           <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">User Management</h1>
           <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mt-1">System Administration & Access Control</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <button
             onClick={fetchData}
             disabled={fetching}
@@ -300,7 +300,7 @@ export default function Settings() {
           <button
             onClick={handleOpenAdd}
             disabled={fetching}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-lg flex items-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-bold text-sm shadow-lg flex items-center justify-center gap-2 transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             <Plus size={18} />
             Add User
@@ -538,7 +538,7 @@ export default function Settings() {
                 placeholder="e.g. 1024"
                 value={formData.empId}
                 onChange={(e) => setFormData({ ...formData, empId: e.target.value })}
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                className="appearance-none w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
               />
             </div>
             {/* Status */}
@@ -547,7 +547,7 @@ export default function Settings() {
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold bg-white"
+                className="appearance-none w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold bg-white"
               >
                 <option value="Active">Active</option>
                 <option value="Inactive">Inactive</option>
@@ -564,7 +564,7 @@ export default function Settings() {
               placeholder="Enter employee's full legal name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+              className="appearance-none w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
             />
           </div>
 
@@ -578,7 +578,7 @@ export default function Settings() {
                 placeholder="e.g. john_doe"
                 value={formData.userId}
                 onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono"
+                className="appearance-none w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono"
               />
             </div>
             {/* Password */}
@@ -591,7 +591,7 @@ export default function Settings() {
                   placeholder="••••••••"
                   value={formData.pass}
                   onChange={(e) => setFormData({ ...formData, pass: e.target.value })}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono pr-10"
+                  className="appearance-none w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold font-mono pr-10"
                 />
                 <button
                   type="button"

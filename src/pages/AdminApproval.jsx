@@ -20,6 +20,7 @@ import {
 import { useAuthStore } from '../store/authStore';
 import { formatDate } from '../utils/helpers';
 import { safeFetchJson } from '../utils/api';
+import BottomSheet from '../components/BottomSheet';
 
 const getDirectDriveLink = (url) => {
   if (!url) return '';
@@ -305,7 +306,7 @@ export default function AdminApproval() {
             placeholder="Search reports..."
             value={filters.searchQuery}
             onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
-            className="w-full bg-white border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all"
+            className="appearance-none min-h-[38px] w-full bg-white border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all"
           />
         </div>
 
@@ -315,14 +316,14 @@ export default function AdminApproval() {
             type="date"
             value={filters.fromDate}
             onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })}
-            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all"
+            className="appearance-none min-h-[38px] w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all"
             title="From Date"
           />
           <input
             type="date"
             value={filters.toDate}
             onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
-            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all"
+            className="appearance-none min-h-[38px] w-full bg-white border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm shadow-sm transition-all"
             title="To Date"
           />
         </div>
@@ -654,106 +655,92 @@ export default function AdminApproval() {
         </div>
       </div>
 
-      {/* View Details Modal */}
-      {showViewModal && selectedReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-end sm:justify-center z-50 sm:p-4">
-          <div className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl w-full max-w-md h-auto max-h-[92dvh] sm:h-auto sm:max-h-[85vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="p-5 border-b border-gray-200 flex justify-between items-center bg-indigo-900 text-white flex-shrink-0">
-              <div>
-                <h2 className="text-xl font-bold uppercase tracking-tight">{selectedReport.sn}</h2>
-                <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest mt-0.5">Report Details</p>
-              </div>
-              <button type="button" onClick={() => setShowViewModal(false)} className="text-indigo-200 hover:text-white transition-colors p-1">
-                <X size={24} />
-              </button>
+      {/* ── View Report Details — iOS Bottom Sheet ───────────────── */}
+      <BottomSheet
+        isOpen={showViewModal && !!selectedReport}
+        onClose={() => setShowViewModal(false)}
+        title={selectedReport?.sn ?? ''}
+        subtitle="Report Details"
+        headerColor="indigo"
+        footer={
+          <button
+            onClick={() => setShowViewModal(false)}
+            className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 active:scale-95 transition shadow-lg shadow-indigo-200 text-sm"
+          >
+            Close Details
+          </button>
+        }
+      >
+        {selectedReport && (
+          <div className="p-5 space-y-5">
+            <div className="flex flex-col gap-1 pb-4 border-b border-gray-100">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee Name</p>
+              <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter leading-none">{selectedReport.name}</h3>
             </div>
 
-            {/* Content */}
-            <div className="p-6 overflow-y-auto flex-1 space-y-6">
-              {/* Profile Bar */}
-              <div className="flex flex-col gap-1 pb-4 border-b border-gray-100">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Employee Name</p>
-                <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter leading-none">{selectedReport.name}</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Work Date</p>
+                <p className="font-bold text-gray-900 flex items-center gap-2 text-sm">
+                  <Calendar size={14} className="text-indigo-500" />
+                  {selectedReport.date ? formatDate(selectedReport.date) : '-'}
+                </p>
               </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Work Date</p>
-                  <p className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                    <Calendar size={14} className="text-indigo-500" />
-                    {selectedReport.date ? formatDate(selectedReport.date) : '-'}
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Op Status</p>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 size={14} className="text-green-500" />
-                    <span className="font-bold text-gray-900 text-xs uppercase">{selectedReport.opStatus}</span>
-                  </div>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-3 col-span-2">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Work Location</p>
-                  <p className="font-bold text-indigo-600 text-sm flex items-center gap-2">
-                    <MapPin size={14} className="text-indigo-500" />
-                    {selectedReport.location}
-                  </p>
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Op Status</p>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 size={14} className="text-green-500" />
+                  <span className="font-bold text-gray-900 uppercase text-xs">{selectedReport.opStatus}</span>
                 </div>
               </div>
-
-              {/* Work Details & Images */}
-              <div className="space-y-4">
-                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                  <FileText size={16} className="text-indigo-600" />
-                  Working Details & Images
-                </h4>
-                <div className="space-y-3">
-                  {selectedReport.details.split('\n').map((line, idx) => {
-                    const detailImages = selectedReport.imageLinks && selectedReport.imageLinks[idx] ? selectedReport.imageLinks[idx] : [];
-                    return (
-                      <div key={idx} className="bg-indigo-50/30 rounded-xl border border-indigo-100 p-4 space-y-3">
-                        <p className="text-sm text-gray-700 leading-relaxed font-medium">{line}</p>
-                        {detailImages.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {detailImages.map((link, imgIdx) => (
-                              <button 
-                                key={imgIdx} 
-                                onClick={() => setPreviewImage(link)}
-                                className="block w-20 h-20 rounded-lg overflow-hidden border border-indigo-200 hover:ring-2 hover:ring-indigo-400 transition shadow-sm"
-                              >
-                                <img src={getDirectDriveLink(link)} alt="Work" className="w-full h-full object-cover" />
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+              <div className="bg-gray-50 rounded-xl p-3 col-span-2">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Work Location</p>
+                <p className="font-bold text-indigo-600 flex items-center gap-2 text-sm">
+                  <MapPin size={14} className="text-indigo-500" />
+                  {selectedReport.location}
+                </p>
               </div>
-
-              {/* Remarks */}
-              {selectedReport.remarks && (
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Additional Remarks</p>
-                  <p className="text-sm text-gray-600 italic border-l-2 border-gray-200 pl-3">{selectedReport.remarks}</p>
-                </div>
-              )}
             </div>
 
-            {/* Footer */}
-            <div className="p-4 pb-safe-area border-t border-gray-100 bg-gray-50 flex-shrink-0">
-              <button
-                onClick={() => setShowViewModal(false)}
-                className="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition shadow-lg"
-              >
-                Close Details
-              </button>
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                <FileText size={14} className="text-indigo-600" />
+                Working Details &amp; Images
+              </h4>
+              <div className="space-y-3">
+                {selectedReport.details.split('\n').map((line, idx) => {
+                  const detailImages = selectedReport.imageLinks && selectedReport.imageLinks[idx] ? selectedReport.imageLinks[idx] : [];
+                  return (
+                    <div key={idx} className="bg-indigo-50/40 rounded-xl border border-indigo-100 p-3 space-y-2">
+                      <p className="text-sm text-gray-700 leading-relaxed font-medium">{line}</p>
+                      {detailImages.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {detailImages.map((link, imgIdx) => (
+                            <button
+                              key={imgIdx}
+                              onClick={() => setPreviewImage(link)}
+                              className="block w-20 h-20 rounded-xl overflow-hidden border border-indigo-200 hover:ring-2 hover:ring-indigo-400 transition shadow-sm active:scale-95"
+                            >
+                              <img src={getDirectDriveLink(link)} alt="Work" className="w-full h-full object-cover" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+
+            {selectedReport.remarks && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Additional Remarks</p>
+                <p className="text-sm text-gray-600 italic border-l-2 border-indigo-200 pl-3">{selectedReport.remarks}</p>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </BottomSheet>
 
       {/* Full Image Preview Modal */}
       {previewImage && (

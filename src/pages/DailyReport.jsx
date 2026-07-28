@@ -316,7 +316,7 @@ export default function DailyReport() {
                   placeholder="Search all fields..."
                   value={filters.searchQuery}
                   onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
-                  className="w-full bg-white border border-gray-300 rounded-lg md:rounded pl-8 pr-3 py-2 md:py-1.5 focus:outline-none focus:border-sky-500 text-sm"
+                  className="appearance-none min-h-[38px] w-full bg-white border border-gray-300 rounded-lg md:rounded pl-8 pr-3 py-2 md:py-1.5 focus:outline-none focus:border-sky-500 text-sm"
                 />
               </div>
             </div>
@@ -336,7 +336,7 @@ export default function DailyReport() {
                 type="date"
                 value={filters.fromDate}
                 onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })}
-                className="w-full bg-white border border-gray-300 rounded-lg md:rounded px-2 md:px-3 py-2 md:py-1.5 focus:outline-none focus:border-sky-500 text-sm"
+                className="appearance-none min-h-[38px] w-full bg-white border border-gray-300 rounded-lg md:rounded px-2 md:px-3 py-2 md:py-1.5 focus:outline-none focus:border-sky-500 text-sm"
               />
             </div>
             <div>
@@ -344,14 +344,14 @@ export default function DailyReport() {
                 type="date"
                 value={filters.toDate}
                 onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
-                className="w-full bg-white border border-gray-300 rounded-lg md:rounded px-2 md:px-3 py-2 md:py-1.5 focus:outline-none focus:border-sky-500 text-sm"
+                className="appearance-none min-h-[38px] w-full bg-white border border-gray-300 rounded-lg md:rounded px-2 md:px-3 py-2 md:py-1.5 focus:outline-none focus:border-sky-500 text-sm"
               />
             </div>
             <div className="col-span-2 md:col-span-1">
               <select
                 value={filters.personName}
                 onChange={(e) => setFilters({ ...filters, personName: e.target.value })}
-                className="w-full bg-white border border-gray-300 rounded-lg md:rounded px-2 md:px-3 py-2 md:py-1.5 focus:outline-none focus:border-sky-500 text-sm"
+                className="appearance-none min-h-[38px] w-full bg-white border border-gray-300 rounded-lg md:rounded px-2 md:px-3 py-2 md:py-1.5 focus:outline-none focus:border-sky-500 text-sm"
               >
                 <option value="">All Persons</option>
                 {Array.from(new Set(reports.map(r => r.name))).filter(Boolean).map(name => (
